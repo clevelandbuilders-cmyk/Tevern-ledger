@@ -12,8 +12,37 @@ body{background:#0a0603;font-family:'Crimson Text',Georgia,serif;min-height:100v
 .sheet{background:linear-gradient(150deg,#f8ecd2,#f0ddb0 50%,#e8d09e);border:2px solid #8b6520;border-radius:3px;padding:16px 14px;max-width:660px;margin:0 auto;box-shadow:0 16px 60px rgba(0,0,0,.75)}
 h1{font-family:'Cinzel Decorative',serif;text-align:center;color:#e8b84b;font-size:clamp(1.2rem,4vw,1.85rem);text-shadow:0 0 30px rgba(201,151,58,.5);margin-bottom:2px}
 .sub{font-family:'Cinzel',serif;text-align:center;color:#8b6520;font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px}
-.nav{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-bottom:3px}
+.nav{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:3px}
 .nav2{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-bottom:14px}
+.builder-progress{display:flex;gap:0;margin-bottom:18px;overflow-x:auto;padding-bottom:4px}
+.bp-step{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:44px;cursor:pointer}
+.bp-dot{width:26px;height:26px;border-radius:50%;border:2px solid rgba(139,101,32,.4);background:transparent;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.58rem;font-weight:700;color:#8b6520;transition:all .2s;position:relative;z-index:1}
+.bp-dot.active{background:#8b6520;color:#f5e6c8;border-color:#8b6520}
+.bp-dot.done{background:#1c4a1c;color:#fff;border-color:#1c4a1c}
+.bp-label{font-family:'Cinzel',serif;font-size:.4rem;letter-spacing:.05em;text-transform:uppercase;color:#8b6520;text-align:center;line-height:1.2}
+.bp-line{flex:1;height:2px;background:rgba(139,101,32,.2);margin-top:12px;min-width:6px}
+.bp-line.done{background:#1c4a1c}
+.builder-card{background:rgba(139,101,32,.06);border:1.5px solid rgba(139,101,32,.3);border-radius:3px;padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:all .2s;position:relative}
+.builder-card:hover{border-color:#8b6520;background:rgba(139,101,32,.1)}
+.builder-card.selected{border-color:#c9973a;background:rgba(201,151,58,.12)}
+.builder-card.selected::after{content:'✓';position:absolute;top:7px;right:9px;font-family:'Cinzel',serif;font-size:.8rem;font-weight:700;color:#c9973a}
+.bc-name{font-family:'Cinzel',serif;font-size:.76rem;font-weight:600;color:#1a1208;margin-bottom:3px}
+.bc-sub{font-family:'Crimson Text',serif;font-size:.82rem;color:#3d2b1a;line-height:1.4}
+.bc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.bc-detail{display:none;margin-top:7px;padding-top:7px;border-top:1px solid rgba(139,101,32,.2);font-size:.82rem;color:#3d2b1a;line-height:1.5}
+.builder-card.selected .bc-detail{display:block}
+.builder-nav{display:flex;gap:8px;justify-content:space-between;margin-top:14px;padding-top:11px;border-top:1px solid rgba(139,101,32,.3)}
+.score-box{background:rgba(139,101,32,.08);border:1.5px solid #8b6520;border-radius:2px;padding:8px 5px;text-align:center}
+.score-val{font-family:'Cinzel',serif;font-size:1.35rem;font-weight:700;color:#1a1208}
+.score-mod{font-family:'Cinzel',serif;font-size:.68rem;color:#8b6520}
+.score-name{font-family:'Cinzel',serif;font-size:.46rem;letter-spacing:.1em;text-transform:uppercase;color:#8b6520;margin-bottom:4px}
+.array-btn{padding:4px 10px;border:1.5px solid #8b6520;border-radius:2px;background:transparent;font-family:'Cinzel',serif;font-size:.6rem;color:#8b6520;cursor:pointer;margin:2px;transition:all .2s}
+.array-btn.used{background:rgba(139,101,32,.15);opacity:.5;cursor:not-allowed}
+.array-btn.selected{background:#8b6520;color:#f5e6c8}
+.review-row{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-bottom:1px solid rgba(139,101,32,.15);font-size:.87rem}
+.review-label{font-family:'Cinzel',serif;font-size:.53rem;letter-spacing:.1em;text-transform:uppercase;color:#8b6520}
+.review-val{font-family:'Crimson Text',serif;font-size:.93rem;color:#1a1208;font-weight:600}
+.btn.gold{background:#c9973a;color:#f5e6c8;border-color:#c9973a}
 .ntab{padding:8px 3px;border:1.5px solid rgba(139,101,32,.4);border-radius:2px;background:transparent;font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.07em;text-transform:uppercase;color:#8b6520;cursor:pointer;text-align:center;transition:all .2s}
 .ntab.active{background:rgba(139,101,32,.18);border-color:#8b6520;color:#1a1208}
 .dvd{display:flex;align-items:center;gap:8px;margin:13px 0 9px}
@@ -113,6 +142,7 @@ textarea{border:1px solid rgba(139,101,32,.3);border-radius:2px;padding:7px;resi
   <!-- Nav -->
 
   <div class="nav">
+    <button class="ntab" onclick="showTab('build',this)">⚒ Build</button>
     <button class="ntab active" onclick="showTab('hero',this)">⚔ Hero</button>
     <button class="ntab" onclick="showTab('combat',this)">🛡 Combat</button>
     <button class="ntab" onclick="showTab('spells',this)">✨ Spells</button>
@@ -123,6 +153,14 @@ textarea{border:1px solid rgba(139,101,32,.3);border-radius:2px;padding:7px;resi
     <button class="ntab" onclick="showTab('lore',this)">📖 Lore</button>
     <button class="ntab" onclick="showTab('dice',this)">🎲 Dice</button>
     <button class="ntab" onclick="showTab('party',this)">💬 Party</button>
+  </div>
+
+  <!-- BUILD TAB -->
+
+  <div id="tab-build" style="display:none">
+    <div class="dvd"><div class="dvd-line"></div><span class="dvd-lbl">Character Builder</span><div class="dvd-line"></div></div>
+    <div class="builder-progress" id="builderProgress"></div>
+    <div id="builderContent"></div>
   </div>
 
   <!-- HERO -->
@@ -565,15 +603,17 @@ window.onload=function(){
   renderCurrency();
   renderCharTabs();
   updateDerived();
+  initBuilder();
 };
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function showTab(name,btn){
-  ['hero','combat','spells','skills','gear','lore','dice','party'].forEach(t=>{
+  ['build','hero','combat','spells','skills','gear','lore','dice','party'].forEach(t=>{
     document.getElementById('tab-'+t).style.display=t===name?'block':'none';
   });
   document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  if(name==='build')initBuilder();
 }
 
 // ── CHAR TABS ─────────────────────────────────────────────────────────────────
@@ -1194,6 +1234,518 @@ function clearSheet(){
   renderSkills();renderSaves();renderConditions();renderDeathSaves();renderAttacks();renderInv();renderMySpells();renderProfTags();renderSpellSlots();updateDerived();
   toast('Sheet cleared');
 }
+
+// ══════════════════════════════════════════════════════════════════
+// CHARACTER BUILDER DATA
+// ══════════════════════════════════════════════════════════════════
+const RACES_DATA=[
+  {name:'Human',tags:['Versatile'],speed:30,size:'Medium',desc:'The most common and adaptable species in the realms.',traits:['Extra Language: Learn one additional language','Feat at 1st level (2024): Gain one Origin feat','Skilled: Gain proficiency in one skill of your choice'],abilityBonus:'All scores +1 (2014) or flexible (2024)'},
+  {name:'Elf',tags:['Keen Senses','Magical'],speed:30,size:'Medium',desc:'Ancient and graceful beings with a deep connection to magic and nature.',traits:['Darkvision 60 ft','Keen Senses: Proficiency in Perception','Fey Ancestry: Advantage vs charm; magic cannot put you to sleep','Trance: 4 hours meditation replaces 8 hours sleep'],abilityBonus:'DEX +2, INT or WIS +1'},
+  {name:'Half-Elf',tags:['Charismatic','Versatile'],speed:30,size:'Medium',desc:'Born of two worlds, blending human adaptability with elven grace.',traits:['Darkvision 60 ft','Fey Ancestry: Advantage vs charm; magic cannot put you to sleep','Skill Versatility: Proficiency in two skills of your choice','Extra Language'],abilityBonus:'CHA +2, two other stats +1'},
+  {name:'Dwarf',tags:['Tough','Resilient'],speed:25,size:'Medium',desc:'Stout and sturdy folk known for their craftsmanship and endurance.',traits:['Darkvision 60 ft','Dwarven Resilience: Advantage on poison saves; resistance to poison damage','Dwarven Combat Training: Proficiency with battleaxe, handaxe, warhammer','Stonecunning: Bonus to History checks related to stonework'],abilityBonus:'CON +2, WIS +1'},
+  {name:'Halfling',tags:['Lucky','Nimble'],speed:25,size:'Small',desc:'Small in stature but large in spirit, known for their luck and good cheer.',traits:['Lucky: Reroll 1s on attack rolls, ability checks, and saving throws','Brave: Advantage on saving throws against being frightened','Halfling Nimbleness: Move through space of larger creatures'],abilityBonus:'DEX +2, CHA +1'},
+  {name:'Gnome',tags:['Clever','Small'],speed:25,size:'Small',desc:'Small but sharp-minded with a natural affinity for illusion and invention.',traits:['Darkvision 60 ft','Gnome Cunning: Advantage on INT/WIS/CHA saves vs magic','Artificer Lore: Add twice proficiency to History checks on magic/alchemy'],abilityBonus:'INT +2, CON +1'},
+  {name:'Dragonborn',tags:['Draconic','Powerful'],speed:30,size:'Medium',desc:'Proud warriors with draconic ancestry who can unleash elemental breath.',traits:['Draconic Ancestry: Choose dragon type (fire, cold, acid, lightning, etc.)','Breath Weapon: 2d6 damage in 15-ft cone or 30-ft line (scales with level)','Damage Resistance: Resistance to your ancestry damage type'],abilityBonus:'STR +2, CHA +1'},
+  {name:'Tiefling',tags:['Infernal','Charismatic'],speed:30,size:'Medium',desc:'Bearing the mark of infernal heritage, possessing both curse and power.',traits:['Darkvision 60 ft','Hellish Resistance: Resistance to fire damage','Infernal Legacy: Thaumaturgy cantrip; Hellish Rebuke (2nd); Darkness (3rd)'],abilityBonus:'INT +1, CHA +2'},
+  {name:'Half-Orc',tags:['Fierce','Enduring'],speed:30,size:'Medium',desc:'The strength of orcs tempered by human tenacity.',traits:['Darkvision 60 ft','Menacing: Proficiency in Intimidation','Relentless Endurance: Once per long rest drop to 1 HP instead of 0','Savage Attacks: Extra die on critical melee hits'],abilityBonus:'STR +2, CON +1'},
+  {name:'Aasimar',tags:['Celestial','Radiant'],speed:30,size:'Medium',desc:'Touched by celestial power, carrying a spark of the divine.',traits:['Darkvision 60 ft','Celestial Resistance: Resistance to necrotic and radiant damage','Healing Hands: Heal HP equal to your level (action, 1/long rest)','Light Bearer: Know Light cantrip'],abilityBonus:'CHA +2'},
+  {name:'Tabaxi',tags:['Quick','Agile'],speed:30,size:'Medium',desc:'Feline humanoids driven by insatiable curiosity and wanderlust.',traits:['Darkvision 60 ft','Feline Agility: Double speed until end of turn (then stop 1 turn)','Cat\'s Claws: Climbing speed 20 ft; unarmed claws 1d4 slashing','Cat\'s Talent: Proficiency in Perception and Stealth'],abilityBonus:'DEX +2, CHA +1'},
+  {name:'Goliath',tags:['Powerful','Mountainborn'],speed:30,size:'Medium',desc:'Mountain giants in humanoid form with immense physical power.',traits:['Powerful Build: Count as Large for carrying capacity','Stone\'s Endurance: Reduce damage by 1d12+CON once per short/long rest','Mountain Born: Resistance to cold; acclimated to high altitude'],abilityBonus:'STR +2, CON +1'},
+];
+
+const CLASSES_DATA=[
+  {name:'Barbarian',hitDie:'1d12',armor:'Light, Medium, Shields',weapons:'Simple, Martial',saves:'STR, CON',primaryStat:'STR',spellcasting:'None',desc:'Fierce warriors who channel primal rage to devastate enemies.',features:['Rage: Advantage STR checks/saves, +2 melee damage, resistance B/P/S','Unarmored Defense: AC = 10 + DEX + CON (no armor)','Reckless Attack: Advantage on attacks, enemies have advantage on you','Danger Sense: Advantage on DEX saves you can see'],subclasses:['Path of the Berserker','Path of the Totem Warrior','Path of the Storm Herald','Path of the Ancestral Guardian','Path of the Zealot']},
+  {name:'Bard',hitDie:'1d8',armor:'Light',weapons:'Simple, Hand Crossbow, Longsword, Rapier, Shortsword',saves:'DEX, CHA',primaryStat:'CHA',spellcasting:'CHA (Full)',desc:'Magical performers who inspire allies and weave powerful spells.',features:['Bardic Inspiration: Bonus action, give 1d6 inspiration die to ally','Jack of All Trades: Add half proficiency to any check','Song of Rest: Party heals extra HP during short rest','Expertise: Double proficiency on two skills'],subclasses:['College of Lore','College of Valor','College of Glamour','College of Swords','College of Whispers']},
+  {name:'Cleric',hitDie:'1d8',armor:'Light, Medium, Shields',weapons:'Simple',saves:'WIS, CHA',primaryStat:'WIS',spellcasting:'WIS (Full)',desc:'Divine servants who channel the power of their deity.',features:['Divine Domain: Choose at 1st level, grants special spells and features','Spellcasting: Prepare WIS mod + cleric level spells daily','Channel Divinity: Once per rest, powerful divine effect','Turn Undead: Force undead to flee'],subclasses:['Life Domain','Light Domain','War Domain','Trickery Domain','Knowledge Domain','Nature Domain','Tempest Domain']},
+  {name:'Druid',hitDie:'1d8',armor:'Light, Medium, Shields (no metal)',weapons:'Clubs, Daggers, Scimitars, Sickles, Spears, Quarterstaffs',saves:'INT, WIS',primaryStat:'WIS',spellcasting:'WIS (Full)',desc:'Guardians of nature who can transform into beasts.',features:['Wild Shape: Transform into beasts 2x per short rest','Spellcasting: Prepare WIS mod + druid level spells','Druidic: Secret language only druids understand','Timeless Body: Age 10x slower at 18th level'],subclasses:['Circle of the Land','Circle of the Moon','Circle of Spores','Circle of Stars','Circle of Wildfire']},
+  {name:'Fighter',hitDie:'1d10',armor:'All armor, Shields',weapons:'Simple, Martial',saves:'STR, CON',primaryStat:'STR or DEX',spellcasting:'None (INT for Eldritch Knight)',desc:'Masters of martial combat trained in all weapons and armor.',features:['Fighting Style: Choose a fighting specialty','Second Wind: Bonus action, regain 1d10+level HP once per short rest','Action Surge: Take extra action once per short rest','Extra Attack: Attack twice at 5th level'],subclasses:['Champion','Battle Master','Eldritch Knight','Arcane Archer','Cavalier','Samurai']},
+  {name:'Monk',hitDie:'1d8',armor:'None',weapons:'Simple, Shortswords',saves:'STR, DEX',primaryStat:'DEX & WIS',spellcasting:'None',desc:'Masters of martial arts who harness ki energy.',features:['Unarmored Defense: AC = 10 + DEX + WIS','Martial Arts: Use DEX for unarmed/monk weapons; 1d4+ damage','Ki Points: Fuel special abilities; regain on short rest','Flurry of Blows: 2 extra unarmed strikes for 1 ki'],subclasses:['Way of the Open Hand','Way of Shadow','Way of the Four Elements','Way of the Drunken Master','Way of the Kensei']},
+  {name:'Paladin',hitDie:'1d10',armor:'All armor, Shields',weapons:'Simple, Martial',saves:'WIS, CHA',primaryStat:'STR & CHA',spellcasting:'CHA (Half)',desc:'Holy warriors bound by sacred oaths to uphold righteousness.',features:['Divine Sense: Detect celestials/fiends/undead within 60 ft','Lay on Hands: Healing pool of 5x paladin level HP','Divine Smite: Expend spell slot for radiant damage on hit','Aura of Protection: +CHA mod to saves for allies within 10 ft'],subclasses:['Oath of Devotion','Oath of the Ancients','Oath of Vengeance','Oath of Conquest','Oath of Glory']},
+  {name:'Ranger',hitDie:'1d10',armor:'Light, Medium, Shields',weapons:'Simple, Martial',saves:'STR, DEX',primaryStat:'DEX & WIS',spellcasting:'WIS (Half)',desc:'Skilled hunters and trackers at home in the wilderness.',features:['Favored Enemy: Advantage tracking chosen enemy type','Natural Explorer: Bonus in chosen terrain','Fighting Style','Hunter\'s Mark: Extra 1d6 damage to marked target'],subclasses:['Hunter','Beast Master','Gloom Stalker','Horizon Walker','Monster Slayer']},
+  {name:'Rogue',hitDie:'1d8',armor:'Light',weapons:'Simple, Hand Crossbow, Longsword, Rapier, Shortsword',saves:'DEX, INT',primaryStat:'DEX',spellcasting:'None (INT for Arcane Trickster)',desc:'Cunning agents who rely on skill, stealth, and dirty tricks.',features:['Sneak Attack: Extra damage when you have advantage or ally is adjacent','Cunning Action: Bonus action Dash/Disengage/Hide','Thieves Cant: Secret criminal language','Uncanny Dodge: Use reaction to halve attack damage'],subclasses:['Thief','Assassin','Arcane Trickster','Inquisitive','Mastermind','Scout','Swashbuckler']},
+  {name:'Sorcerer',hitDie:'1d6',armor:'None',weapons:'Daggers, Darts, Slings, Quarterstaffs, Light Crossbows',saves:'CON, CHA',primaryStat:'CHA',spellcasting:'CHA (Full)',desc:'Spellcasters born with innate magical power.',features:['Sorcerous Origin: Your magical bloodline','Sorcery Points: Fuel metamagic and extra spell slots','Metamagic: Modify spells (Quicken, Twin, Subtle, Heighten, etc.)','Font of Magic: Convert spell slots to/from sorcery points'],subclasses:['Draconic Bloodline','Wild Magic','Divine Soul','Shadow Magic','Storm Sorcery']},
+  {name:'Warlock',hitDie:'1d8',armor:'Light',weapons:'Simple',saves:'WIS, CHA',primaryStat:'CHA',spellcasting:'CHA (Pact Magic)',desc:'Wielders of power granted by powerful otherworldly patrons.',features:['Eldritch Blast: Force damage cantrip, your primary attack','Pact Magic: Short rest spell slots (fewer but fast refreshing)','Eldritch Invocations: Modify Eldritch Blast or gain new powers','Pact Boon: Choose Book, Blade, or Chain pact at 3rd level'],subclasses:['The Fiend','The Great Old One','The Archfey','The Undying','The Celestial','The Hexblade']},
+  {name:'Wizard',hitDie:'1d6',armor:'None',weapons:'Daggers, Darts, Slings, Quarterstaffs, Light Crossbows',saves:'INT, WIS',primaryStat:'INT',spellcasting:'INT (Full)',desc:'Scholars of the arcane who learn spells through study.',features:['Spellbook: Your collection of known spells','Arcane Recovery: Once per day regain spell slots on short rest','Spell Mastery: Cast two spells without slots at 18th level','Signature Spells: Two spells always prepared at 20th level'],subclasses:['School of Evocation','School of Abjuration','School of Conjuration','School of Divination','School of Enchantment','School of Illusion','School of Necromancy','School of Transmutation']},
+];
+
+const BACKGROUNDS_DATA=[
+  {name:'Acolyte',skills:['Insight','Religion'],tools:'None',languages:'Two of your choice',equipment:'Holy symbol, prayer book, 5 incense sticks, vestments, common clothes, 15 gp',feature:'Shelter of the Faithful: Free lodging at temples of your faith.'},
+  {name:'Criminal',skills:['Deception','Stealth'],tools:"Thieves' tools, one gaming set",languages:'None',equipment:'Crowbar, dark common clothes with hood, 15 gp',feature:'Criminal Contact: A reliable contact in the criminal underworld.'},
+  {name:'Folk Hero',skills:['Animal Handling','Survival'],tools:"One artisan's tool, vehicles (land)",languages:'None',equipment:"Artisan's tools, shovel, iron pot, common clothes, 10 gp",feature:'Rustic Hospitality: Common folk will shelter and assist you.'},
+  {name:'Noble',skills:['History','Persuasion'],tools:'One gaming set',languages:'One of your choice',equipment:'Fine clothes, signet ring, scroll of pedigree, purse with 25 gp',feature:'Position of Privilege: Easy access to high society.'},
+  {name:'Sage',skills:['Arcana','History'],tools:'None',languages:'Two of your choice',equipment:'Bottle of black ink, quill, small knife, letter from colleague, common clothes, 10 gp',feature:"Researcher: When you don't know information, you know where to find it."},
+  {name:'Soldier',skills:['Athletics','Intimidation'],tools:'One gaming set, vehicles (land)',languages:'None',equipment:'Insignia of rank, battle trophy, deck of cards, common clothes, 10 gp',feature:'Military Rank: Soldiers of your old unit respect your rank.'},
+  {name:'Guild Artisan',skills:['Insight','Persuasion'],tools:"One artisan's tool",languages:'One of your choice',equipment:"Artisan's tools, letter of introduction, traveler's clothes, 15 gp",feature:'Guild Membership: Fellow guild members provide lodging and assistance.'},
+  {name:'Outlander',skills:['Athletics','Survival'],tools:'One musical instrument',languages:'One of your choice',equipment:'Staff, hunting trap, trophy from animal, traveler\'s clothes, 10 gp',feature:'Wanderer: Excellent recall of geography; can find food and fresh water.'},
+];
+
+const STANDARD_ARRAY=[15,14,13,12,10,8];
+
+// ── BUILDER STATE ─────────────────────────────────────────────────
+let builderStep=0;
+let builderData={race:null,charClass:null,subclass:null,level:1,scores:{str:10,dex:10,con:10,int:10,wis:10,cha:10},scoreMethod:'standard',standardAssigned:{},background:null};
+const BUILDER_STEPS=[
+  {id:'race',label:'Species'},
+  {id:'level',label:'Level'},
+  {id:'class',label:'Class'},
+  {id:'subclass',label:'Subclass'},
+  {id:'scores',label:'Scores'},
+  {id:'background',label:'Background'},
+  {id:'equipment',label:'Equipment'},
+  {id:'review',label:'Review'},
+];
+
+// ── BUILDER INIT ──────────────────────────────────────────────────
+function initBuilder(){
+  renderBuilderProgress();
+  renderBuilderStep();
+}
+
+function renderBuilderProgress(){
+  const c=document.getElementById('builderProgress');
+  if(!c)return;
+  c.innerHTML='';
+  BUILDER_STEPS.forEach((step,i)=>{
+    const done=i<builderStep;
+    const active=i===builderStep;
+    if(i>0)c.innerHTML+=`<div class="bp-line${done?' done':''}"></div>`;
+    c.innerHTML+=`<div class="bp-step" onclick="gotoBuilderStep(${i})">
+      <div class="bp-dot${active?' active':done?' done':''}">${done?'✓':(i+1)}</div>
+      <div class="bp-label">${step.label}</div>
+    </div>`;
+  });
+}
+
+function gotoBuilderStep(i){
+  if(i>builderStep&&!isStepComplete(builderStep))return;
+  builderStep=i;renderBuilderProgress();renderBuilderStep();
+}
+
+function isStepComplete(step){
+  const s=BUILDER_STEPS[step].id;
+  if(s==='race')return builderData.race!==null;
+  if(s==='class')return builderData.charClass!==null;
+  if(s==='subclass')return builderData.subclass!==null;
+  if(s==='background')return builderData.background!==null;
+  return true;
+}
+
+function renderBuilderStep(){
+  const c=document.getElementById('builderContent');
+  if(!c)return;
+  const step=BUILDER_STEPS[builderStep].id;
+  if(step==='race')renderBuilderRace(c);
+  else if(step==='level')renderBuilderLevel(c);
+  else if(step==='class')renderBuilderClass(c);
+  else if(step==='subclass')renderBuilderSubclass(c);
+  else if(step==='scores')renderBuilderScores(c);
+  else if(step==='background')renderBuilderBackground(c);
+  else if(step==='equipment')renderBuilderEquipment(c);
+  else if(step==='review')renderBuilderReview(c);
+}
+
+// ── STEP 1: RACE ──────────────────────────────────────────────────
+function renderBuilderRace(c){
+  c.innerHTML=`<p style="font-family:'Crimson Text',serif;font-size:.85rem;color:#3d2b1a;font-style:italic;margin-bottom:10px">Choose your species. Tap a card to see full traits — selected cards expand automatically.</p>`;
+  RACES_DATA.forEach((r,i)=>{
+    const sel=builderData.race===r.name;
+    c.innerHTML+=`<div class="builder-card${sel?' selected':''}" onclick="selectRace('${r.name.replace(/'/g,"\\'")}')">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="flex:1"><div class="bc-name">${r.name}</div><div class="bc-sub">${r.desc}</div></div>
+        <div style="text-align:right;flex-shrink:0;margin-top:2px">
+          <div style="font-family:'Cinzel',serif;font-size:.52rem;color:#8b6520">${r.speed}ft · ${r.size}</div>
+          <div style="font-family:'Cinzel',serif;font-size:.48rem;color:#c9973a;margin-top:2px">${r.abilityBonus}</div>
+        </div>
+      </div>
+      <div class="bc-tags">${r.tags.map(t=>`<span class="bdg">${t}</span>`).join('')}</div>
+      <div class="bc-detail">
+        <strong style="font-family:'Cinzel',serif;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em">Racial Traits:</strong>
+        <ul style="margin:5px 0 0 14px">${r.traits.map(t=>`<li style="margin-bottom:3px">${t}</li>`).join('')}</ul>
+      </div>
+    </div>`;
+  });
+  c.innerHTML+=builderNav(false,builderData.race!==null);
+}
+function selectRace(name){builderData.race=name;renderBuilderStep();}
+
+// ── STEP 2: LEVEL ─────────────────────────────────────────────────
+function renderBuilderLevel(c){
+  const lvl=builderData.level||1;
+  const xpTable=[0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
+  const profBonus=Math.ceil(lvl/4)+1;
+  c.innerHTML=`<p style="font-family:'Crimson Text',serif;font-size:.85rem;color:#3d2b1a;font-style:italic;margin-bottom:12px">What level is your character starting at? Most campaigns begin at Level 1.</p>
+  <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:18px">
+    <button onclick="if(builderData.level>1){builderData.level--;renderBuilderLevel(document.getElementById('builderContent'))}" style="width:38px;height:38px;border:2px solid #8b6520;border-radius:50%;background:transparent;font-size:1.4rem;cursor:pointer;color:#8b6520;line-height:1;padding:0;font-family:'Cinzel',serif">−</button>
+    <div style="text-align:center">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:3rem;font-weight:700;color:#1a1208;line-height:1">${lvl}</div>
+      <div style="font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:#8b6520;margin-top:3px">Level</div>
+    </div>
+    <button onclick="if(builderData.level<20){builderData.level++;renderBuilderLevel(document.getElementById('builderContent'))}" style="width:38px;height:38px;border:2px solid #8b6520;border-radius:50%;background:transparent;font-size:1.4rem;cursor:pointer;color:#8b6520;line-height:1;padding:0;font-family:'Cinzel',serif">+</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+    <div class="sb"><label class="lbl">Prof Bonus</label><div class="sb-val">+${profBonus}</div></div>
+    <div class="sb"><label class="lbl">XP Required</label><div class="sb-val" style="font-size:.9rem">${xpTable[lvl-1]?.toLocaleString()||'—'}</div></div>
+    <div class="sb"><label class="lbl">ASI at</label><div class="sb-val" style="font-size:.75rem">${[4,8,12,16,19].filter(n=>n<=lvl).join(', ')||'—'}</div></div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px">
+    ${[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(n=>`<button onclick="builderData.level=${n};renderBuilderLevel(document.getElementById('builderContent'))" style="width:34px;height:34px;border:1.5px solid ${n===lvl?'#c9973a':'rgba(139,101,32,.4)'};border-radius:2px;background:${n===lvl?'rgba(201,151,58,.18)':'transparent'};font-family:'Cinzel',serif;font-size:.68rem;font-weight:${n===lvl?'700':'400'};color:${n===lvl?'#1a1208':'#8b6520'};cursor:pointer">${n}</button>`).join('')}
+  </div>
+  <div class="section-info">Most new campaigns start at Level 1. Your DM may start you higher for one-shots or advanced campaigns.</div>
+  ${builderNav(true,true)}`;
+}
+function renderBuilderClass(c){
+  c.innerHTML=`<p style="font-family:'Crimson Text',serif;font-size:.85rem;color:#3d2b1a;font-style:italic;margin-bottom:10px">Choose your class. This shapes your role, abilities, and spell access.</p>`;
+  CLASSES_DATA.forEach((cl,i)=>{
+    const sel=builderData.charClass===cl.name;
+    c.innerHTML+=`<div class="builder-card${sel?' selected':''}" onclick="selectClass('${cl.name}')">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="flex:1"><div class="bc-name">${cl.name}</div><div class="bc-sub">${cl.desc}</div></div>
+        <div style="text-align:right;flex-shrink:0;margin-top:2px">
+          <div style="font-family:'Cinzel',serif;font-size:.52rem;color:#8b6520">Hit Die: ${cl.hitDie}</div>
+          <div style="font-family:'Cinzel',serif;font-size:.48rem;color:#c9973a;margin-top:2px">${cl.spellcasting}</div>
+        </div>
+      </div>
+      <div class="bc-tags"><span class="bdg blue">Saves: ${cl.saves}</span><span class="bdg">${cl.primaryStat}</span></div>
+      <div class="bc-detail">
+        <div style="margin-bottom:5px"><strong style="font-family:'Cinzel',serif;font-size:.52rem;text-transform:uppercase">Armor:</strong> ${cl.armor}</div>
+        <div style="margin-bottom:6px"><strong style="font-family:'Cinzel',serif;font-size:.52rem;text-transform:uppercase">Weapons:</strong> ${cl.weapons}</div>
+        <strong style="font-family:'Cinzel',serif;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em">Key Features:</strong>
+        <ul style="margin:5px 0 0 14px">${cl.features.map(f=>`<li style="margin-bottom:3px">${f}</li>`).join('')}</ul>
+      </div>
+    </div>`;
+  });
+  c.innerHTML+=builderNav(true,builderData.charClass!==null);
+}
+function selectClass(name){builderData.charClass=name;builderData.subclass=null;renderBuilderStep();}
+
+// ── STEP 4: SUBCLASS ──────────────────────────────────────────────
+function renderBuilderSubclass(c){
+  const cl=CLASSES_DATA.find(x=>x.name===builderData.charClass);
+  if(!cl){c.innerHTML='<div class="section-info">Please go back and select a class first.</div>'+builderNav(true,false);return;}
+  const unlockLevel={Cleric:1,Druid:1,Sorcerer:1,Warlock:1,Barbarian:3,Bard:3,Fighter:3,Monk:3,Paladin:3,Ranger:3,Rogue:3,Wizard:2,Artificer:3};
+  const lvl=unlockLevel[cl.name]||3;
+  const charLvl=builderData.level||1;
+  const activeNow=charLvl>=lvl;
+  c.innerHTML=`<p style="font-family:'Crimson Text',serif;font-size:.85rem;color:#3d2b1a;font-style:italic;margin-bottom:6px">Choose your <strong>${cl.name}</strong> subclass.</p>
+  <div class="section-info" style="margin-bottom:10px">📖 <strong>${cl.name}</strong> subclass features unlock at <strong>Level ${lvl}</strong>. ${activeNow?'You\'re Level '+charLvl+' so your subclass features are active now.':'You\'re Level '+charLvl+' — your subclass features will activate when you reach Level '+lvl+'.'}</div>`;
+  cl.subclasses.forEach(sub=>{
+    const sel=builderData.subclass===sub;
+    c.innerHTML+=`<div class="builder-card${sel?' selected':''}" onclick="selectSubclass('${sub.replace(/'/g,"\\'")}')">
+      <div class="bc-name">${sub}</div>
+      <div class="bc-sub">${getSubclassDesc(builderData.charClass,sub)}</div>
+    </div>`;
+  });
+  c.innerHTML+=builderNav(true,builderData.subclass!==null);
+}
+function getSubclassDesc(cls,sub){
+  const d={
+    // ── BARBARIAN ──
+    'Path of the Berserker':'The most straightforward and aggressive path. When you rage you can enter a Frenzy — making a bonus action attack every single turn. Downside: you gain Exhaustion after the rage ends. Best for players who want maximum melee damage and don\'t mind a resource trade-off.',
+    'Path of the Totem Warrior':'A spiritual warrior who channels animal spirits. Choose Bear (resistance to almost all damage while raging), Eagle (dash as bonus action, enemies have disadv on opportunity attacks), or Wolf (allies have advantage attacking prone enemies). More tactical and versatile than Berserker.',
+    'Path of the Storm Herald':'Elemental rage aura that damages nearby enemies or helps allies. Choose Desert (fire damage around you), Sea (lightning bolts), or Tundra (temp HP for allies). Great if you want a Barbarian with area-of-effect presence.',
+    'Path of the Ancestral Guardian':'When you rage, spectral ancestors protect your allies. Enemies you attack have disadvantage hitting anyone other than you, and allies gain resistance to attacks from those enemies. The ultimate tank/protector Barbarian.',
+    'Path of the Zealot':'A divine warrior whose rage is fueled by religious fervor. You deal extra radiant or necrotic damage, can\'t be killed while raging, and eventually allies can resurrect you for free. Best for players who want a Barbarian with a holy/faith theme.',
+    // ── BARD ──
+    'College of Lore':'The knowledge-focused Bard. You gain 3 extra skill proficiencies, Cutting Words (use Bardic Inspiration to subtract from an enemy\'s roll as a reaction), and Magical Secrets at 6th level (steal spells from ANY class list). The most versatile and skill-focused Bard.',
+    'College of Valor':'The warrior Bard. You gain medium armor, shields, martial weapons, and Extra Attack at 6th level. Combat Inspiration lets allies add your die to AC or damage. Best if you want to fight on the front lines while still supporting the party.',
+    'College of Glamour':'A Bard touched by the Feywild with charm-based powers. Mantle of Inspiration gives multiple allies temp HP and a free movement. Mantle of Majesty lets you cast Command as a bonus action repeatedly. Best for face characters and social encounters.',
+    'College of Swords':'A blade-wielding Bard who can use Bardic Inspiration for combat maneuvers — Defensive Flourish (+AC), Slashing Flourish (hit two targets), Mobile Flourish (push and reposition). Medium armor, extra attack. Great for duelist or swashbuckler characters.',
+    'College of Whispers':'A sinister Bard who deals psychic damage, steals the identity of killed humanoids, and can implant fears in enemies with Mantle of Whispers. Best for spies, assassins, or characters with a dark and deceptive theme.',
+    // ── CLERIC ──
+    'Life Domain':'The best healer in the game. Disciple of Life makes every healing spell significantly more powerful. Heavy armor proficiency. Preserve Life channels a huge burst heal divided among nearby allies. If someone needs to keep the party alive, this is the choice.',
+    'Light Domain':'An offensive Cleric who wields radiant and fire magic. Warding Flare lets you impose disadvantage on an attack against you as a reaction. Radiance of the Dawn blinds and damages enemies. Access to spells like Fireball and Scorching Ray. Best for players who want a battle-mage Cleric.',
+    'War Domain':'A martial Cleric built for combat. Heavy armor, martial weapons, and War Priest lets you make bonus action weapon attacks. Divine Strike adds weapon damage. Ideal for players who want to fight in melee alongside the party.',
+    'Trickery Domain':'A deceptive Cleric focused on stealth and illusion. Invoke Duplicity creates a perfect decoy of yourself. Cloak of Shadows makes you invisible as an action. Access to spells like Disguise Self and Pass Without Trace. Best for sneaky or roguish Cleric concepts.',
+    'Knowledge Domain':'A lore-focused Cleric who can temporarily gain proficiency in any skill or tool. Visions of the Past reveal history of objects or locations. Read Thoughts lets you telepathically dig into someone\'s mind. Best for investigators, scholars, and information-gathering playstyles.',
+    'Nature Domain':'A druidic Cleric with a nature theme. Acolyte of Nature gives a Druid cantrip and a skill. Dampen Elements gives allies resistance to elemental damage. Bonus proficiency in heavy armor. Best if you want a nature-themed Cleric who can protect the party from elemental threats.',
+    'Tempest Domain':'An aggressive weather Cleric. Thunderous Rebuke lets you knock enemies back when they hit you. Destructive Wrath maximizes lightning or thunder damage. Access to Thunderwave, Shatter, and Call Lightning. Best for a stormy, aggressive Cleric who gets in enemies\' faces.',
+    // ── DRUID ──
+    'Circle of the Land':'An academically-trained Druid tied to a specific terrain. You regain spell slots on a short rest with Natural Recovery, and your chosen terrain gives you bonus spells always prepared (Arctic gets Hold Person and Spike Growth, Forest gets Barkskin and Spider Climb, etc.). Best for spellcasting-focused Druids.',
+    'Circle of the Moon':'The combat Wild Shape Druid. At 2nd level you can Wild Shape into CR 1 creatures (Brown Bear AC 11, 34 HP; Dire Wolf; etc.) and by 6th level you can become CR 6 beasts. You can cast spells while shifted and shift as a bonus action in combat. Best for players who want to play as animals.',
+    'Circle of Spores':'A Druid of death and decay. Halo of Spores deals necrotic damage to nearby creatures as a reaction. Symbiotic Entity doubles your Wild Shape HP pool and adds 1d6 necrotic damage to attacks. You can animate corpses. Best for players who prefer a darker nature theme.',
+    'Circle of Stars':'A celestial Druid who maps the stars. Star Map gives extra uses of Guidance and Guiding Bolt. Starry Form transforms you into a constellation with three forms: Archer (bonus action radiant bolt), Chalice (bonus healing on spells), Dragon (CON concentration checks, INT checks). Balanced and very useful.',
+    'Circle of Wildfire':'A Druid bonded to a Wildfire Spirit that you summon like a familiar. The spirit can teleport allies out of danger, deals fire damage, and enables a powerful 38 HP companion. Access to fire spells. Best for players who want a Druid with a pet and a more aggressive elemental style.',
+    // ── FIGHTER ──
+    'Champion':'Simple and devastatingly effective. Your critical hit range expands to 19-20 (then 18-20 at 15th). Remarkable Athlete adds half proficiency to STR/DEX/CON checks and improves jump distance. If you want maximum damage with no complex mechanics, Champion is the choice.',
+    'Battle Master':'The tactician Fighter. You gain Superiority Dice (d8s) to fuel combat maneuvers like Riposte (counter-attack after being missed), Trip Attack (knock prone), Precision Attack (add to hit roll), Commander\'s Strike (give an ally an attack). The most skill-expressive and versatile Fighter.',
+    'Eldritch Knight':'A Fighter who learns Wizard spells — primarily Abjuration (defensive) and Evocation (offensive). War Magic lets you attack after casting a cantrip. Spell-storing item and eventually Improved War Magic. Best for players who want a Fighter with some magical utility.',
+    'Arcane Archer':'A ranged Fighter who imbues arrows with magical effects — Beguiling Arrow (charm), Bursting Arrow (AoE damage), Seeking Arrow (ignores cover), Shadow Arrow (blinds). You get 2 uses per short rest. Best for players who want a magical archer with tactical variety.',
+    'Cavalier':'The mounted combat specialist and party protector. Unwavering Mark lets you mark enemies — if they attack anyone other than you, you can make a bonus attack against them. Born to the Saddle for mounted expertise. Best for players who want a mounted knight or party defender.',
+    'Samurai':'A noble warrior of tireless focus. Fighting Spirit gives you advantage on all attacks for a turn 3 times per long rest plus temporary HP. Elegant Courtier adds WIS to Persuasion. Rapid Strike trades advantage for an extra attack. Best for focused, high-damage melee Fighters.',
+    // ── MONK ──
+    'Way of the Open Hand':'The classic martial arts master. Flurry of Blows can now knock enemies prone, push them 15 feet, or prevent reactions. Open Hand Technique for surgical battlefield control. Wholeness of Body heals you for 3× monk level once per long rest. The most straightforward and powerful combat Monk.',
+    'Way of Shadow':'A ninja-style Monk. Shadow Arts lets you cast Darkness, Darkvision, Pass Without Trace, and Silence for ki points. Shadow Step teleports you between areas of dim light or darkness and grants advantage on the next attack. Best for stealthy, assassin-style characters.',
+    'Way of the Four Elements':'Bend elemental forces with ki — throw walls of fire, create earthquakes, ride the wind. Very flavorful but ki-intensive. Best for players who love the Avatar: The Last Airbender concept and are willing to manage resources carefully.',
+    'Way of the Drunken Master':'An unpredictable fighting style that makes you incredibly hard to hit. Drunken Technique gives Disengage and +10 movement with Flurry of Blows. Tipsy Sway lets enemies\' misses redirect to other attackers. Drunkard\'s Luck. Very mobile and slippery in combat.',
+    'Way of the Kensei':'A weapons master who treats chosen weapons as monk weapons. You can use ranged weapons as monk weapons, add +2 AC when you attack with your kensei weapon as a bonus action, and eventually deal extra damage. Best for Monks who want to use swords or bows elegantly.',
+    // ── PALADIN ──
+    'Oath of Devotion':'The classic holy warrior. Sacred Weapon adds CHA modifier to attack rolls. Holy Nimbus at 20th level radiates blinding light that damages undead and fiends. Sacred Flame and extra healing. Best for players who want a straightforward noble knight archetype.',
+    'Oath of the Ancients':'A nature-themed Paladin who protects beauty and life. Aura of Warding gives you and nearby allies resistance to spell damage — incredibly powerful. Speak with Animals and Ensnaring Strike as oath spells. Best for players who want a Paladin with a nature/Fey theme.',
+    'Oath of Vengeance':'The most combat-focused Paladin. Vow of Enmity gives advantage on attacks against one target. Misty Step and Hold Person as bonus oath spells. Relentless Avenger lets you move after opportunity attacks. Best for hunters who want to lock down and destroy priority targets.',
+    'Oath of Conquest':'A conqueror who terrifies enemies. Conquering Presence frightens multiple enemies. Aura of Conquest keeps frightened enemies frozen and takes psychic damage. Access to Armor of Agathys and Spiritual Weapon. Best for domineering, intimidating tyrant-type characters.',
+    'Oath of Glory':'A Paladin who inspires heroic greatness. Inspiring Smite spreads temporary HP to allies after a Divine Smite. Aura of Alacrity increases the walking speed of allies. Glorious Defense lets you add CHA to AC when you or an ally is hit. Best for support-focused party leaders.',
+    // ── RANGER ──
+    'Hunter':'The versatile combat Ranger. Choose between Colossus Slayer (extra d8 vs wounded targets), Giant Killer (reaction attack vs Large+ enemies), or Horde Breaker (hit adjacent enemy). Later pick between defensive and offensive upgrades. Simple, effective, great for new players.',
+    'Beast Master':'Bond with an animal companion — a hawk, bear, boar, or panther — that fights alongside you. The companion scales with your level and acts on your turn. Best for players who dream of adventuring with a loyal animal partner. Requires action economy management.',
+    'Gloom Stalker':'A darkness-hunting Ranger built for ambush. Dread Ambusher adds an extra attack on the first round of combat. You\'re invisible in magical darkness. Umbral Sight means creatures with darkvision can\'t see you in darkness. Best for players who want a stealthy, strike-first predator.',
+    'Horizon Walker':'A planar guardian who hunts extraplanar threats. Detect Portal senses nearby planar rifts. Planar Warrior deals extra force damage. Ethereal Step lets you briefly walk the Ethereal Plane. Best for players interested in multidimensional lore and a mystical Ranger theme.',
+    'Monster Slayer':'A specialist in hunting powerful monsters. Hunter\'s Sense reveals immunities and resistances before a fight. Slayer\'s Prey marks a target for bonus damage and reaction attacks when it hits allies. Magic-User\'s Nemesis counters teleportation. Best for tactical monster hunters.',
+    // ── ROGUE ──
+    'Thief':'The classic Rogue, elevated. Fast Hands lets you use thieves\' tools, activate magic items, or use object interactions as a bonus action. Second-Story Work gives climbing speed equal to walking speed. Use Magic Device eventually lets you use any magic item regardless of class requirements.',
+    'Assassin':'A master of ambush and disguise. Assassinate gives you advantage on any creature that hasn\'t acted yet in combat, and all hits against surprised creatures are automatic crits. Infiltration Expertise for perfect false identities. Best for players who want to strike from the shadows and eliminate targets.',
+    'Arcane Trickster':'A spellcasting Rogue who learns Wizard illusion and enchantment spells. Mage Hand Legerdemain makes your spectral hand nearly undetectable and able to pick locks. Magical Ambush imposes disadvantage on spell saves against enemies you\'re hiding from. Best for clever, trick-based playstyles.',
+    'Inquisitive':'A detective Rogue with unmatched perception. Insightful Fighting lets you use a bonus action Insight check to sneak attack without advantage for the rest of the encounter. Eye for Detail uses a bonus action to Perception/Investigation. Best for investigation-heavy campaigns.',
+    'Mastermind':'A manipulative tactician and social spy. Master of Intrigue lets you mimic accents, speech patterns, and use disguise kits. Master of Tactics lets you Help an ally as a bonus action from up to 30 feet away — great for enabling allies\' sneak attacks. Best for social campaigns.',
+    'Scout':'A wilderness expert and skirmisher. Skirmisher lets you move your speed as a reaction when an enemy ends their turn adjacent to you — making you nearly impossible to catch. Superior Mobility adds 10 ft to your speed. Best for hit-and-run, mobile combat in exploration-heavy campaigns.',
+    'Swashbuckler':'A dashing duelist. Fancy Footwork means creatures you attack can\'t make opportunity attacks against you that turn. Rakish Audacity lets you sneak attack without an ally nearby as long as no other creatures are adjacent — perfect solo Rogue. Best for charming, theatrical characters.',
+    // ── SORCERER ──
+    'Draconic Bloodline':'Your magic stems from dragon ancestry. Draconic Resilience gives you AC 13+DEX without armor — you never need Mage Armor. Dragon Wings at 14th level for permanent flight. Elemental Affinity adds CHA modifier to damage of your chosen element. Excellent defensive Sorcerer.',
+    'Wild Magic':'Unpredictable surges of raw magic. Tides of Chaos gives you advantage on one roll per long rest. After using it, the DM can trigger a Wild Magic Surge — random effects from a d100 table (frogs rain from the sky, you glow, you teleport, etc.). Best for players who enjoy chaos and comedic moments.',
+    'Divine Soul':'A Sorcerer with divine favor. You gain access to the ENTIRE Cleric spell list in addition to Sorcerer spells — doubling your options. Favored by the Gods lets you add 2d4 to a failed save once per short rest. Empowered Healing boosts healing spells. Best for a versatile healer/damage hybrid.',
+    'Shadow Magic':'A Sorcerer touched by the Shadowfell. Eyes of the Dark gives Darkvision 120 ft and lets you cast Darkness for 2 sorcery points. Strength of the Grave once per long rest lets you drop to 1 HP instead of 0. Hound of Ill Omen summons a shadowy dire wolf. Best for a dark, gothic Sorcerer theme.',
+    'Storm Sorcery':'A Sorcerer crackling with storm power. Tempestuous Magic lets you fly 10 ft as a bonus action when you cast a spell — avoiding opportunity attacks. Heart of the Storm damages nearby enemies when you cast lightning/thunder spells. Wind Soul gives permanent flight. Best for lightning-focused aerial Sorcerers.',
+    // ── WARLOCK ──
+    'The Fiend':'Make a pact with a devil or demon. Dark One\'s Blessing gives you temp HP equal to your CHA modifier + Warlock level every time you kill something — you never run out of HP in combat. Fiendish Resilience gives resistance to a damage type you choose each short rest. Access to Fireball and Wall of Fire. The most combat-durable Warlock.',
+    'The Great Old One':'Pact with an incomprehensible cosmic entity. Awakened Mind lets you telepathically communicate with any creature within 30 feet in any language (or no language). Entropic Ward imposes disadvantage on an attack against you and gives you advantage if it misses. Thought Shield makes you immune to telepathy. Best for mysterious, cosmic horror themes.',
+    'The Archfey':'Bound to a powerful Fey lord or lady. Fey Presence lets you charm or frighten all creatures in a 10-ft cube as an action. Misty Escape lets you turn invisible and teleport when you take damage — once per short rest. Beguiling Defenses makes you immune to charm and turns charms back on the caster. Best for enchantment and social-focused Warlocks.',
+    'The Undying':'Pact with a powerful undead — a lich, death knight, or vampire lord. Among the Dead gives proficiency in Medicine and lets undead ignore you. Defy Death stabilizes you on a 1 (CON save) and heals you. Undying Nature means you don\'t need to eat, drink, or breathe, and age 10× slower. Best for necromantic or gothic character concepts.',
+    'The Celestial':'A light-bringer empowered by a celestial patron. Healing Light gives you a pool of d6s to heal allies as a bonus action — unique among Warlocks. Radiant Soul adds CHA modifier to radiant/fire spell damage. Celestial Resilience gives temp HP to you and allies on a short rest. Best for a Warlock who supports and heals the party.',
+    'The Hexblade':'Pact with a mysterious sentient weapon from the Shadowfell. Hexblade\'s Curse marks an enemy for bonus damage, crits on 19-20, and heals you if they die. Hex Warrior lets you use CHA for attack/damage with your pact weapon — eliminating need for STR or DEX investment. The best single-target melee Warlock.',
+    // ── WIZARD ──
+    'School of Evocation':'Master of direct damage spells. Sculpt Spells lets you protect allies inside your own Fireball — they automatically succeed the save and take no damage. Potent Cantrip makes targets take half damage even on a successful save. Overchannel maximizes damage of 5th-level-or-lower spells. The classic blasting Wizard.',
+    'School of Abjuration':'Master of protection and defense. Arcane Ward creates a HP buffer (twice your Wizard level + INT modifier) that absorbs damage before it touches you — free recharge with Abjuration spells. Projected Ward extends this to allies. Spell Resistance gives advantage on saves vs spells. Excellent at keeping the party alive.',
+    'School of Conjuration':'Master of summoning. Minor Conjuration creates small objects from nothing. Benign Transposition teleports you or a conjured creature 30 ft as a bonus action. Focused Conjuration means concentration on Conjuration spells can\'t be broken by damage. Best for summoning builds and utility-focused Wizards.',
+    'School of Divination':'Master of fate and knowledge. Portent is the most powerful feature in this school: roll 2d20 at dawn and replace ANY roll (yours or an enemy\'s) with those results. You can guarantee a crit or auto-fail a saving throw. Expert Divination regains spell slots when casting divination spells. The most game-changing subclass in the game.',
+    'School of Enchantment':'Master of mind control. Hypnotic Gaze charms a creature you can see within 5 ft as a bonus action. Instinctive Charm redirects an attack against you to a nearby creature. Split Enchantment lets you target two creatures with single-target enchantments. Best for social manipulation and charm-heavy playstyles.',
+    'School of Illusion':'Master of deception and misdirection. Improved Minor Illusion creates both sound and image. Malleable Illusions lets you change illusions you\'ve cast as an action. Illusory Self creates a decoy as a reaction to being hit — once per short rest. Illusory Reality makes one part of an illusion temporarily real. Best for creative, trick-based players.',
+    'School of Necromancy':'Master of undeath. Grim Harvest heals you when you kill creatures with spells. Undead Thralls lets you animate more undead and they\'re stronger. Command Undead eventually lets you control any undead. Best for players who want an army of undead servants and a dark, gothic theme.',
+    'School of Transmutation':'Master of transformation. Minor Alchemy temporarily changes materials. Transmuter\'s Stone provides a constant buff (darkvision, extra speed, proficiency, or resistance) that you can swap daily. Shapechanger lets you Polymorph yourself for free once per short rest. Best for flexible, adaptive Wizards.',
+  };
+  return d[sub]||`A specialized ${cls} archetype. Ask your DM or check the Player\'s Handbook for full details.`;
+}
+function selectSubclass(name){builderData.subclass=name;renderBuilderStep();}
+
+// ── STEP 4: ABILITY SCORES ────────────────────────────────────────
+window._selAb=null;
+function renderBuilderScores(c){
+  const method=builderData.scoreMethod;
+  c.innerHTML=`<p style="font-family:'Crimson Text',serif;font-size:.85rem;color:#3d2b1a;font-style:italic;margin-bottom:10px">Set your six ability scores.</p>
+  <div style="display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap">
+    <button class="btn btn-sm${method==='standard'?' primary':''}" onclick="setScoreMethod('standard')">Standard Array</button>
+    <button class="btn btn-sm${method==='pointbuy'?' primary':''}" onclick="setScoreMethod('pointbuy')">Point Buy</button>
+    <button class="btn btn-sm${method==='manual'?' primary':''}" onclick="setScoreMethod('manual')">Manual</button>
+    <button class="btn btn-sm${method==='roll'?' primary':''}" onclick="setScoreMethod('roll')">Roll 4d6</button>
+  </div>`;
+
+  if(method==='standard'){
+    c.innerHTML+=`<div class="section-info" style="margin-bottom:8px">Assign <strong>15, 14, 13, 12, 10, 8</strong> to abilities. Tap an ability to select it, then tap a value to assign.</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">
+      ${STANDARD_ARRAY.map(val=>{
+        const used=Object.values(builderData.standardAssigned).includes(val);
+        return`<button class="array-btn${used?' used':''}" onclick="${used?'':('assignArrayVal('+val+')')}">${val}</button>`;
+      }).join('')}
+    </div>
+    <div class="g2" style="gap:7px">
+      ${ABS.map(ab=>{
+        const assigned=builderData.standardAssigned[ab.id];
+        const isSel=window._selAb===ab.id;
+        return`<div class="score-box" onclick="window._selAb='${ab.id}';renderBuilderStep()" style="cursor:pointer;${isSel?'border-color:#c9973a;background:rgba(201,151,58,.18)':''}">
+          <div class="score-name">${ab.s}</div>
+          <div class="score-val">${assigned||'—'}</div>
+          <div class="score-mod">${assigned?fm(gm(assigned)):'tap'}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } else if(method==='pointbuy'){
+    const costFn=v=>(v<=13?v-8:[0,0,0,0,0,0,1,1,1,2,2,2,2,3][v-8]||0);
+    const spent=Object.values(builderData.scores).reduce((t,v)=>t+costFn(v),0);
+    const rem=27-spent;
+    c.innerHTML+=`<div class="section-info" style="margin-bottom:8px">Points remaining: <strong>${rem}</strong> / 27. Scores range 8–15.</div>
+    <div class="g2" style="gap:7px">
+      ${ABS.map(ab=>{
+        const val=builderData.scores[ab.id]||8;
+        return`<div class="score-box">
+          <div class="score-name">${ab.s}</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:6px">
+            <button onclick="pbAdj('${ab.id}',-1)" style="width:22px;height:22px;border:1px solid #8b6520;border-radius:2px;background:transparent;font-size:1.1rem;cursor:pointer;color:#8b6520;line-height:1;padding:0">−</button>
+            <div class="score-val">${val}</div>
+            <button onclick="pbAdj('${ab.id}',1)" style="width:22px;height:22px;border:1px solid #8b6520;border-radius:2px;background:transparent;font-size:1.1rem;cursor:pointer;color:#8b6520;line-height:1;padding:0">+</button>
+          </div>
+          <div class="score-mod">${fm(gm(val))}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } else if(method==='manual'){
+    c.innerHTML+=`<div class="section-info" style="margin-bottom:8px">Tap a box and type your score — the old value clears when you tap. Typical range is 3–18.</div>
+    <div class="g2" style="gap:7px">
+      ${ABS.map(ab=>{
+        const val=builderData.scores[ab.id]||10;
+        return`<div class="score-box">
+          <div class="score-name">${ab.s}</div>
+          <input type="number" min="1" max="30" value="${val}"
+            onfocus="this.select()"
+            onblur="var n=parseInt(this.value)||10;builderData.scores['${ab.id}']=n;this.value=n;this.nextElementSibling.textContent=(n>=10?'+':'')+Math.floor((n-10)/2)"
+            style="font-family:'Cinzel',serif;font-size:1.2rem;font-weight:700;text-align:center;width:52px;border:none;border-bottom:1px solid #8b6520;background:transparent;outline:none;color:#1a1208;display:block;margin:3px auto">
+          <div class="score-mod">${fm(gm(val))}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } else {
+    c.innerHTML+=`<div class="section-info" style="margin-bottom:8px">Roll 4d6 drop lowest for each score. Click "Roll All" or roll individually.</div>
+    <button class="btn gold" style="width:100%;margin-bottom:10px" onclick="rollAllScores()">🎲 Roll All Scores</button>
+    <div class="g2" style="gap:7px">
+      ${ABS.map(ab=>{
+        const val=builderData.scores[ab.id]||10;
+        return`<div class="score-box">
+          <div class="score-name">${ab.s}</div>
+          <div class="score-val">${val}</div>
+          <div class="score-mod">${fm(gm(val))}</div>
+          <button onclick="rollOneScore('${ab.id}')" style="margin-top:4px;padding:2px 8px;border:1px solid #8b6520;border-radius:2px;background:transparent;font-family:'Cinzel',serif;font-size:.48rem;color:#8b6520;cursor:pointer;text-transform:uppercase;letter-spacing:.08em">Roll</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  c.innerHTML+=builderNav(true,true);
+}
+function setScoreMethod(m){builderData.scoreMethod=m;builderData.standardAssigned={};window._selAb=null;renderBuilderStep();}
+function assignArrayVal(val){
+  if(!window._selAb)return;
+  if(Object.values(builderData.standardAssigned).includes(val)&&builderData.standardAssigned[window._selAb]!==val)return;
+  builderData.standardAssigned[window._selAb]=val;
+  builderData.scores[window._selAb]=val;
+  window._selAb=null;
+  renderBuilderStep();
+}
+function pbAdj(id,dir){
+  const cur=builderData.scores[id]||8;
+  const nv=Math.max(8,Math.min(15,cur+dir));
+  const costFn=v=>(v<=13?v-8:[0,0,0,0,0,0,1,1,1,2,2,2,2,3][v-8]||0);
+  const spent=Object.entries(builderData.scores).reduce((t,[k,v])=>t+(k===id?costFn(nv):costFn(v)),0);
+  if(spent>27)return;
+  builderData.scores[id]=nv;
+  renderBuilderStep();
+}
+function rollOneScore(id){
+  const rolls=[...Array(4)].map(()=>Math.floor(Math.random()*6)+1).sort((a,b)=>b-a).slice(0,3);
+  builderData.scores[id]=rolls.reduce((a,b)=>a+b,0);
+  renderBuilderStep();
+}
+function rollAllScores(){ABS.forEach(ab=>rollOneScore(ab.id));renderBuilderStep();}
+
+// ── STEP 5: BACKGROUND ────────────────────────────────────────────
+function renderBuilderBackground(c){
+  c.innerHTML=`<p style="font-family:'Crimson Text',serif;font-size:.85rem;color:#3d2b1a;font-style:italic;margin-bottom:10px">Choose your background. This provides skills, equipment, and story hooks.</p>`;
+  BACKGROUNDS_DATA.forEach(bg=>{
+    const sel=builderData.background===bg.name;
+    c.innerHTML+=`<div class="builder-card${sel?' selected':''}" onclick="selectBackground('${bg.name}')">
+      <div class="bc-name">${bg.name}</div>
+      <div class="bc-sub">${bg.feature}</div>
+      <div class="bc-tags"><span class="bdg blue">Skills: ${bg.skills.join(', ')}</span>${bg.languages!=='None'?`<span class="bdg">Languages: ${bg.languages}</span>`:''}</div>
+      <div class="bc-detail">
+        <div style="margin-bottom:5px"><strong style="font-family:'Cinzel',serif;font-size:.52rem;text-transform:uppercase">Equipment:</strong> ${bg.equipment}</div>
+        <div><strong style="font-family:'Cinzel',serif;font-size:.52rem;text-transform:uppercase">Feature:</strong> ${bg.feature}</div>
+      </div>
+    </div>`;
+  });
+  c.innerHTML+=builderNav(true,builderData.background!==null);
+}
+function selectBackground(name){builderData.background=name;renderBuilderStep();}
+
+// ── STEP 6: EQUIPMENT ─────────────────────────────────────────────
+function renderBuilderEquipment(c){
+  const cl=CLASSES_DATA.find(x=>x.name===builderData.charClass);
+  const bg=BACKGROUNDS_DATA.find(x=>x.name===builderData.background);
+  const classEquip={Barbarian:'Greataxe or any martial melee weapon, 2 handaxes, explorer\'s pack, 4 javelins',Bard:'Rapier or longsword or any simple weapon, diplomat\'s pack or entertainer\'s pack, lute, leather armor, dagger',Cleric:'Mace or warhammer, scale mail or leather armor, light crossbow + 20 bolts or simple weapon, priest\'s pack, shield, holy symbol',Druid:'Wooden shield or any simple weapon, scimitar or simple melee weapon, leather armor, explorer\'s pack, druidic focus',Fighter:'Chain mail or leather + longbow + 20 arrows, any martial weapon + shield or two martial weapons, dungeoneer\'s pack or explorer\'s pack',Monk:'Shortsword or simple weapon, dungeoneer\'s pack or explorer\'s pack, 10 darts',Paladin:'Martial weapon + shield or two martial weapons, 5 javelins or simple melee weapon, priest\'s pack, chain mail, holy symbol',Ranger:'Scale mail or leather armor, shortswords or simple melee weapons, dungeoneer\'s pack or explorer\'s pack, longbow + 20 arrows',Rogue:"Rapier or shortsword, shortbow + 20 arrows, burglar's pack, leather armor, 2 daggers, thieves' tools",Sorcerer:'Light crossbow + 20 bolts or any simple weapon, component pouch or arcane focus, dungeoneer\'s pack, 2 daggers',Warlock:'Light crossbow + 20 bolts or any simple weapon, component pouch or arcane focus, scholar\'s pack or dungeoneer\'s pack, leather armor, simple weapon, 2 daggers',Wizard:'Quarterstaff or dagger, component pouch or arcane focus, scholar\'s pack, spellbook',Artificer:"Two simple weapons, light crossbow + 20 bolts, thieves' tools, dungeoneer's pack"};
+  c.innerHTML=`<p style="font-family:'Crimson Text',serif;font-size:.85rem;color:#3d2b1a;font-style:italic;margin-bottom:10px">Your starting equipment from class and background.</p>`;
+  if(bg)c.innerHTML+=`<div style="background:rgba(139,101,32,.06);border:1.5px solid #8b6520;border-radius:2px;padding:10px 12px;margin-bottom:10px"><div class="lbl" style="margin-bottom:5px">From ${bg.name}</div><div style="font-size:.87rem;color:#3d2b1a">${bg.equipment}</div></div>`;
+  if(cl&&classEquip[cl.name])c.innerHTML+=`<div style="background:rgba(139,101,32,.06);border:1.5px solid #8b6520;border-radius:2px;padding:10px 12px;margin-bottom:10px"><div class="lbl" style="margin-bottom:5px">From ${cl.name}</div><div style="font-size:.87rem;color:#3d2b1a">${classEquip[cl.name]}</div></div>`;
+  c.innerHTML+=`<div class="section-info">This equipment will be added to your inventory automatically when you confirm.</div>`;
+  c.innerHTML+=builderNav(true,true);
+}
+
+// ── STEP 7: REVIEW ────────────────────────────────────────────────
+function renderBuilderReview(c){
+  const cl=CLASSES_DATA.find(x=>x.name===builderData.charClass);
+  const race=RACES_DATA.find(x=>x.name===builderData.race);
+  c.innerHTML=`<p style="font-family:'Crimson Text',serif;font-size:.85rem;color:#3d2b1a;font-style:italic;margin-bottom:10px">Review your character. Tap any step in the progress bar to go back and edit.</p>
+  <div style="background:rgba(139,101,32,.06);border:1.5px solid #8b6520;border-radius:2px;padding:10px 12px;margin-bottom:10px">
+    <div class="lbl" style="margin-bottom:8px">Identity</div>
+    <div class="review-row"><span class="review-label">Level</span><span class="review-val">${builderData.level||1}</span></div>
+    <div class="review-row"><span class="review-label">Race / Species</span><span class="review-val">${builderData.race||'—'}</span></div>
+    <div class="review-row"><span class="review-label">Class</span><span class="review-val">${builderData.charClass||'—'}</span></div>
+    <div class="review-row"><span class="review-label">Subclass</span><span class="review-val">${builderData.subclass||'—'}</span></div>
+    <div class="review-row"><span class="review-label">Background</span><span class="review-val">${builderData.background||'—'}</span></div>
+    <div class="review-row"><span class="review-label">Speed</span><span class="review-val">${race?race.speed:30} ft</span></div>
+    <div class="review-row"><span class="review-label">Hit Die</span><span class="review-val">${cl?cl.hitDie:'—'}</span></div>
+    <div class="review-row"><span class="review-label">Spellcasting</span><span class="review-val">${cl?cl.spellcasting:'None'}</span></div>
+  </div>
+  <div style="background:rgba(139,101,32,.06);border:1.5px solid #8b6520;border-radius:2px;padding:10px 12px;margin-bottom:14px">
+    <div class="lbl" style="margin-bottom:8px">Ability Scores</div>
+    <div class="g6">
+      ${ABS.map(ab=>`<div style="text-align:center">
+        <div style="font-family:'Cinzel',serif;font-size:.44rem;text-transform:uppercase;color:#8b6520">${ab.s}</div>
+        <div style="font-family:'Cinzel',serif;font-size:1.2rem;font-weight:700;color:#1a1208">${builderData.scores[ab.id]||10}</div>
+        <div style="font-family:'Cinzel',serif;font-size:.66rem;color:#8b6520">${fm(gm(builderData.scores[ab.id]||10))}</div>
+      </div>`).join('')}
+    </div>
+  </div>
+  <button class="btn gold" style="width:100%;padding:12px;font-size:.68rem;letter-spacing:.15em;margin-bottom:8px" onclick="confirmBuilder()">✦ Confirm &amp; Create Character</button>
+  ${builderNav(true,false,true)}`;
+}
+
+function confirmBuilder(){
+  const cl=CLASSES_DATA.find(x=>x.name===builderData.charClass);
+  const race=RACES_DATA.find(x=>x.name===builderData.race);
+  const bg=BACKGROUNDS_DATA.find(x=>x.name===builderData.background);
+  // Set ability scores
+  ABS.forEach(ab=>{const el=document.getElementById('ab-'+ab.id);if(el)el.value=builderData.scores[ab.id]||10;});
+  // Set identity
+  const sv=(id,val)=>{const e=document.getElementById(id);if(e)e.value=val;};
+  sv('charClass',builderData.charClass||'');
+  sv('subclass',builderData.subclass||'');
+  sv('charRace',builderData.race||'');
+  sv('charBg',builderData.background||'');
+  sv('charLevel',builderData.level||1);
+  if(cl){
+    sv('statHD',cl.hitDie);
+    const hpBase={Barbarian:12,Fighter:10,Paladin:10,Ranger:10,Artificer:8,Bard:8,Cleric:8,Druid:8,Monk:8,Rogue:8,Warlock:8,Sorcerer:6,Wizard:6};
+    const hp=(hpBase[cl.name]||8)+gm(builderData.scores.con||10);
+    sv('hpMax',hp);sv('hpCur',hp);
+    sv('statSpeed',race?race.speed:30);
+    sv('statAC',10+gm(builderData.scores.dex||10));
+  }
+  // Background skills
+  if(bg){
+    bg.skills.forEach(sk=>{skillProf[sk]=1;});
+    inventory.push({name:'['+bg.name+' Background] '+bg.equipment,qty:1,weight:'',value:''});
+  }
+  // Class saving throw proficiencies
+  if(cl){
+    cl.saves.split(', ').forEach(save=>{
+      const ab=ABS.find(a=>a.s===save.trim());
+      if(ab)saveProf[ab.id]=1;
+    });
+  }
+  onClassChange();
+  updateDerived();
+  renderSkills();
+  renderSaves();
+  renderInv();
+  showTab('hero',document.querySelectorAll('.ntab')[1]);
+  toast('✦ Character created! Check your Hero tab.');
+}
+
+function builderNav(showBack,showNext,hideNext){
+  return`<div class="builder-nav">
+    ${showBack?`<button class="btn btn-sm" onclick="builderPrev()">← Back</button>`:'<span></span>'}
+    ${!hideNext?`<button class="btn${showNext?' primary':''} btn-sm" onclick="builderNext()" ${showNext?'':'disabled style="opacity:.45;cursor:not-allowed"'}>Next →</button>`:'<span></span>'}
+  </div>`;
+}
+function builderNext(){
+  if(!isStepComplete(builderStep)){toast('Make a selection to continue');return;}
+  if(builderStep<BUILDER_STEPS.length-1){builderStep++;renderBuilderProgress();renderBuilderStep();}
+}
+function builderPrev(){if(builderStep>0){builderStep--;renderBuilderProgress();renderBuilderStep();}}
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function toast(msg){

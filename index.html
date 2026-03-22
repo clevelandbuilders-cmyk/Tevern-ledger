@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tavern Ledger — D&D 5e Character Sheet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0603; }
+  select option { background: #f5e6c8; color: #1a1208; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: rgba(139,101,32,.1); }
+  ::-webkit-scrollbar-thumb { background: #8b6520; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback } = React;
+
+// ── SPELL DATABASE ─────────────────────────────────────────────────────────
+const SPELLS = [
+{name:“Eldritch Blast”,level:0,school:“Evocation”,castTime:“1 Action”,range:“120 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Warlock”],saveAtk:“Spell Atk”,desc:“1d10 force per beam. 2 beams at 5th, 3 at 11th, 4 at 17th.”},
+{name:“Fire Bolt”,level:0,school:“Evocation”,castTime:“1 Action”,range:“120 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Sorcerer”,“Wizard”],saveAtk:“Spell Atk”,desc:“1d10 fire. Scales at 5th/11th/17th.”},
+{name:“Minor Illusion”,level:0,school:“Illusion”,castTime:“1 Action”,range:“30 ft”,components:“S,M”,duration:“1 Minute”,classes:[“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Sound or 5-ft image. INT Investigation to disbelieve.”},
+{name:“Mage Hand”,level:0,school:“Conjuration”,castTime:“1 Action”,range:“30 ft”,components:“V,S”,duration:“1 Minute”,classes:[“Artificer”,“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Spectral hand, carries 10 lbs, manipulates objects. Can’t attack.”},
+{name:“Prestidigitation”,level:0,school:“Transmutation”,castTime:“1 Action”,range:“10 ft”,components:“V,S”,duration:“Up to 1 hr”,classes:[“Artificer”,“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Minor tricks: light/snuff fire, clean/soil object, chill/warm/flavor, color, sensory effect.”},
+{name:“Ray of Frost”,level:0,school:“Evocation”,castTime:“1 Action”,range:“60 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Sorcerer”,“Wizard”],saveAtk:“Spell Atk”,desc:“1d8 cold + speed -10 ft. Scales at 5th (2d8).”},
+{name:“Shocking Grasp”,level:0,school:“Evocation”,castTime:“1 Action”,range:“Touch”,components:“V,S”,duration:“Instantaneous”,classes:[“Artificer”,“Sorcerer”,“Wizard”],saveAtk:“Spell Atk”,desc:“1d8 lightning (adv vs metal armor), target loses reactions.”},
+{name:“Chill Touch”,level:0,school:“Necromancy”,castTime:“1 Action”,range:“120 ft”,components:“V,S”,duration:“1 Round”,classes:[“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“Spell Atk”,desc:“1d10 necrotic. Undead have disadv attacking you.”},
+{name:“Vicious Mockery”,level:0,school:“Enchantment”,castTime:“1 Action”,range:“60 ft”,components:“V”,duration:“Instantaneous”,classes:[“Bard”],saveAtk:“WIS Save”,desc:“WIS save or 1d4 psychic + disadv on next attack.”},
+{name:“Toll the Dead”,level:0,school:“Necromancy”,castTime:“1 Action”,range:“60 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Cleric”,“Warlock”,“Wizard”],saveAtk:“WIS Save”,desc:“WIS save or 1d8 necrotic (1d12 if missing HP).”},
+{name:“Guidance”,level:0,school:“Divination”,castTime:“1 Action”,range:“Touch”,components:“V,S”,duration:“Conc, 1 min”,classes:[“Artificer”,“Cleric”,“Druid”],saveAtk:”—”,desc:“Willing creature adds 1d4 to one ability check.”},
+{name:“Sacred Flame”,level:0,school:“Evocation”,castTime:“1 Action”,range:“60 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Cleric”],saveAtk:“DEX Save”,desc:“DEX save (no benefit from cover) or 1d8 radiant.”},
+{name:“Thaumaturgy”,level:0,school:“Transmutation”,castTime:“1 Action”,range:“30 ft”,components:“V”,duration:“Up to 1 min”,classes:[“Cleric”],saveAtk:”—”,desc:“Minor divine wonders: thunder, flame flicker, tremor, glowing eyes, door changes.”},
+{name:“True Strike”,level:0,school:“Divination”,castTime:“1 Action”,range:“30 ft”,components:“S”,duration:“Conc, 1 Round”,classes:[“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Advantage on your first attack roll against one creature.”},
+{name:“Blade Ward”,level:0,school:“Abjuration”,castTime:“1 Action”,range:“Self”,components:“V,S”,duration:“1 Round”,classes:[“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Resistance to bludgeoning, piercing, slashing from weapon attacks until next turn.”},
+{name:“Dancing Lights”,level:0,school:“Evocation”,castTime:“1 Action”,range:“120 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Artificer”,“Bard”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Up to 4 torch-sized lights. Move 60 ft per bonus action.”},
+{name:“Frostbite”,level:0,school:“Evocation”,castTime:“1 Action”,range:“60 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Druid”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“CON Save”,desc:“CON save or 1d6 cold + disadv on next weapon attack.”},
+{name:“Booming Blade”,level:0,school:“Evocation”,castTime:“1 Action”,range:“Self (5ft)”,components:“S,M”,duration:“1 Round”,classes:[“Artificer”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“Melee Atk”,desc:“Melee attack. On hit, if target moves voluntarily: 1d8 thunder. Scales at 5th.”},
+{name:“Green-Flame Blade”,level:0,school:“Evocation”,castTime:“1 Action”,range:“Self (5ft)”,components:“S,M”,duration:“Instantaneous”,classes:[“Artificer”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“Melee Atk”,desc:“Melee attack + green fire to 2nd creature within 5ft for CHA mod fire damage.”},
+{name:“Poison Spray”,level:0,school:“Conjuration”,castTime:“1 Action”,range:“10 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Artificer”,“Druid”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“CON Save”,desc:“CON save or 1d12 poison. Scales at 5th (2d12).”},
+// 1st Level
+{name:“Magic Missile”,level:1,school:“Evocation”,castTime:“1 Action”,range:“120 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Sorcerer”,“Wizard”],saveAtk:“Auto-hit”,desc:“3 darts, each 1d4+1 force. Always hits. +1 dart per slot above 1st.”},
+{name:“Mage Armor”,level:1,school:“Abjuration”,castTime:“1 Action”,range:“Touch”,components:“V,S,M”,duration:“8 Hours”,classes:[“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Touch unarmored willing creature: AC = 13 + DEX mod. KEY for Sorcerers — DEX +3 = AC 16.”},
+{name:“Shield”,level:1,school:“Abjuration”,castTime:“1 Reaction”,range:“Self”,components:“V,S”,duration:“1 Round”,classes:[“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Reaction when hit: +5 AC (including vs trigger) + immune to Magic Missile until next turn.”},
+{name:“Burning Hands”,level:1,school:“Evocation”,castTime:“1 Action”,range:“Self (15ft cone)”,components:“V,S”,duration:“Instantaneous”,classes:[“Sorcerer”,“Wizard”],saveAtk:“DEX Save”,desc:“15-ft cone: DEX save or 3d6 fire (half on save). +1d6 per slot.”},
+{name:“Charm Person”,level:1,school:“Enchantment”,castTime:“1 Action”,range:“30 ft”,components:“V,S”,duration:“1 Hour”,classes:[“Bard”,“Druid”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“WIS Save”,desc:“Humanoid: WIS save or charmed for 1 hr. Knows it was charmed after.”},
+{name:“Sleep”,level:1,school:“Enchantment”,castTime:“1 Action”,range:“90 ft”,components:“V,S,M”,duration:“1 Minute”,classes:[“Bard”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“5d8 HP of creatures fall unconscious (lowest first). +2d8 per slot.”},
+{name:“Thunderwave”,level:1,school:“Evocation”,castTime:“1 Action”,range:“Self (15ft cube)”,components:“V,S”,duration:“Instantaneous”,classes:[“Bard”,“Cleric”,“Druid”,“Sorcerer”,“Wizard”],saveAtk:“CON Save”,desc:“15-ft cube: CON save or 2d8 thunder + pushed 10ft. +1d8 per slot.”},
+{name:“Detect Magic”,level:1,school:“Divination”,castTime:“1 Action (Ritual)”,range:“Self”,components:“V,S”,duration:“Conc, 10 min”,classes:[“Artificer”,“Bard”,“Cleric”,“Druid”,“Paladin”,“Ranger”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Sense magic within 30ft. See auras, know school of magic.”},
+{name:“Cure Wounds”,level:1,school:“Evocation”,castTime:“1 Action”,range:“Touch”,components:“V,S”,duration:“Instantaneous”,classes:[“Artificer”,“Bard”,“Cleric”,“Druid”,“Paladin”,“Ranger”],saveAtk:”—”,desc:“Restore 1d8 + spellcasting mod HP. +1d8 per slot. No effect on undead.”},
+{name:“Healing Word”,level:1,school:“Evocation”,castTime:“1 Bonus Action”,range:“60 ft”,components:“V”,duration:“Instantaneous”,classes:[“Bard”,“Cleric”,“Druid”],saveAtk:”—”,desc:“Restore 1d4 + spellcasting mod HP as a bonus action. +1d4 per slot.”},
+{name:“Bane”,level:1,school:“Enchantment”,castTime:“1 Action”,range:“30 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Bard”,“Cleric”],saveAtk:“CHA Save”,desc:“Up to 3 creatures: CHA save or -1d4 to attack rolls and saves.”},
+{name:“Bless”,level:1,school:“Enchantment”,castTime:“1 Action”,range:“30 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Cleric”,“Paladin”],saveAtk:”—”,desc:“Up to 3 creatures add 1d4 to attack rolls and saving throws.”},
+{name:“Command”,level:1,school:“Enchantment”,castTime:“1 Action”,range:“60 ft”,components:“V”,duration:“1 Round”,classes:[“Cleric”,“Paladin”],saveAtk:“WIS Save”,desc:“One-word command: Approach, Drop, Flee, Grovel, Halt. WIS save to resist.”},
+{name:“Faerie Fire”,level:1,school:“Evocation”,castTime:“1 Action”,range:“60 ft”,components:“V”,duration:“Conc, 1 min”,classes:[“Artificer”,“Bard”,“Druid”],saveAtk:“DEX Save”,desc:“20-ft cube: DEX save or outlined. Attacks vs outlined have adv; no benefit from invisibility.”},
+{name:“Hellish Rebuke”,level:1,school:“Evocation”,castTime:“1 Reaction”,range:“60 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Warlock”],saveAtk:“DEX Save”,desc:“Reaction when damaged: DEX save or 2d10 fire (half on save). +1d10 per slot.”},
+{name:“Armor of Agathys”,level:1,school:“Abjuration”,castTime:“1 Action”,range:“Self”,components:“V,S,M”,duration:“1 Hour”,classes:[“Warlock”],saveAtk:”—”,desc:“Gain 5 temp HP. While you have them, melee attackers take 5 cold. +5 each per slot.”},
+{name:“Expeditious Retreat”,level:1,school:“Transmutation”,castTime:“1 Bonus Action”,range:“Self”,components:“V,S”,duration:“Conc, 10 min”,classes:[“Artificer”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Dash as a bonus action each turn for the duration.”},
+{name:“Fog Cloud”,level:1,school:“Conjuration”,castTime:“1 Action”,range:“120 ft”,components:“V,S”,duration:“Conc, 1 hr”,classes:[“Druid”,“Ranger”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“20-ft radius heavily obscured sphere. +20ft radius per slot.”},
+{name:“Feather Fall”,level:1,school:“Transmutation”,castTime:“1 Reaction”,range:“60 ft”,components:“V,M”,duration:“1 Minute”,classes:[“Artificer”,“Bard”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Up to 5 falling creatures: fall 60ft/round, no falling damage.”},
+{name:“Disguise Self”,level:1,school:“Illusion”,castTime:“1 Action”,range:“Self”,components:“V,S”,duration:“1 Hour”,classes:[“Artificer”,“Bard”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Change appearance including clothing/armor. Up to 1ft taller/shorter.”},
+{name:“False Life”,level:1,school:“Necromancy”,castTime:“1 Action”,range:“Self”,components:“V,S,M”,duration:“1 Hour”,classes:[“Artificer”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Gain 1d4+4 temp HP. +5 per slot above 1st.”},
+{name:“Grease”,level:1,school:“Conjuration”,castTime:“1 Action”,range:“60 ft”,components:“V,S,M”,duration:“1 Minute”,classes:[“Artificer”,“Wizard”],saveAtk:“DEX Save”,desc:“10-ft square: difficult terrain. Entering/starting: DEX save or fall prone.”},
+{name:“Color Spray”,level:1,school:“Illusion”,castTime:“1 Action”,range:“Self (15ft cone)”,components:“V,S,M”,duration:“1 Round”,classes:[“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Blind creatures totaling 6d10 HP (lowest first) for 1 round.”},
+{name:“Comprehend Languages”,level:1,school:“Divination”,castTime:“1 Action (Ritual)”,range:“Self”,components:“V,S,M”,duration:“1 Hour”,classes:[“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Understand any spoken language; read written by touch (1 min/page).”},
+{name:“Find Familiar”,level:1,school:“Conjuration”,castTime:“1 Hour (Ritual)”,range:“10 ft”,components:“V,S,M”,duration:“Instantaneous”,classes:[“Wizard”],saveAtk:”—”,desc:“Spirit familiar (cat, owl, frog, etc.): acts on your turn, delivers touch spells.”},
+{name:“Identify”,level:1,school:“Divination”,castTime:“1 Min (Ritual)”,range:“Touch”,components:“V,S,M”,duration:“Instantaneous”,classes:[“Artificer”,“Bard”,“Wizard”],saveAtk:”—”,desc:“Learn magic properties, how to use, charges, and spells affecting a creature.”},
+{name:“Jump”,level:1,school:“Transmutation”,castTime:“1 Action”,range:“Touch”,components:“V,S,M”,duration:“1 Minute”,classes:[“Artificer”,“Druid”,“Ranger”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Triple a creature’s jump distance.”},
+{name:“Longstrider”,level:1,school:“Transmutation”,castTime:“1 Action”,range:“Touch”,components:“V,S,M”,duration:“1 Hour”,classes:[“Artificer”,“Bard”,“Druid”,“Ranger”,“Wizard”],saveAtk:”—”,desc:“Speed +10 ft. +1 target per slot above 1st.”},
+{name:“Shield of Faith”,level:1,school:“Abjuration”,castTime:“1 Bonus Action”,range:“60 ft”,components:“V,S,M”,duration:“Conc, 10 min”,classes:[“Cleric”,“Paladin”],saveAtk:”—”,desc:”+2 AC to one creature for the duration.”},
+{name:“Witch Bolt”,level:1,school:“Evocation”,castTime:“1 Action”,range:“30 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“Spell Atk”,desc:“Spell attack: 1d12 lightning. Each turn: action for 1d12 auto. Ends if out of range.”},
+// 2nd Level
+{name:“Misty Step”,level:2,school:“Conjuration”,castTime:“1 Bonus Action”,range:“Self”,components:“V”,duration:“Instantaneous”,classes:[“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Teleport up to 30ft to unoccupied visible space.”},
+{name:“Mirror Image”,level:2,school:“Illusion”,castTime:“1 Action”,range:“Self”,components:“V,S”,duration:“1 Minute”,classes:[“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“3 illusory duplicates. Roll d20 when attacked: 3 copies=6+, 2=8+, 1=11+ hit duplicate.”},
+{name:“Scorching Ray”,level:2,school:“Evocation”,castTime:“1 Action”,range:“120 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Sorcerer”,“Wizard”],saveAtk:“Spell Atk”,desc:“3 rays of fire; each spell attack for 2d6 fire. +1 ray per slot.”},
+{name:“Shatter”,level:2,school:“Evocation”,castTime:“1 Action”,range:“60 ft”,components:“V,S,M”,duration:“Instantaneous”,classes:[“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“CON Save”,desc:“10-ft sphere: CON save or 3d8 thunder (half on save). Stone/crystal has disadv. +1d8 per slot.”},
+{name:“Hold Person”,level:2,school:“Enchantment”,castTime:“1 Action”,range:“60 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Bard”,“Cleric”,“Druid”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“WIS Save”,desc:“Paralyze a humanoid. WIS save each turn. Attacks vs. target adv; 5ft hits are crits.”},
+{name:“Invisibility”,level:2,school:“Illusion”,castTime:“1 Action”,range:“Touch”,components:“V,S,M”,duration:“Conc, 1 hr”,classes:[“Artificer”,“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Target invisible until spell ends or it attacks/casts. +1 target per slot.”},
+{name:“Blur”,level:2,school:“Illusion”,castTime:“1 Action”,range:“Self”,components:“V”,duration:“Conc, 1 min”,classes:[“Artificer”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Attack rolls against you have disadvantage.”},
+{name:“Suggestion”,level:2,school:“Enchantment”,castTime:“1 Action”,range:“30 ft”,components:“V,M”,duration:“Conc, 8 hrs”,classes:[“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“WIS Save”,desc:“Suggest reasonable action (1–2 sentences). WIS save or creature pursues it.”},
+{name:“Darkness”,level:2,school:“Evocation”,castTime:“1 Action”,range:“60 ft”,components:“V,M”,duration:“Conc, 10 min”,classes:[“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“15-ft radius magical darkness. Darkvision can’t pierce it.”},
+{name:“Darkvision”,level:2,school:“Transmutation”,castTime:“1 Action”,range:“Touch”,components:“V,S,M”,duration:“8 Hours”,classes:[“Artificer”,“Druid”,“Ranger”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Grant 60-ft darkvision to a willing creature.”},
+{name:“Enlarge/Reduce”,level:2,school:“Transmutation”,castTime:“1 Action”,range:“30 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Artificer”,“Sorcerer”,“Wizard”],saveAtk:“CON Save”,desc:“Enlarge: double size, +1d4 damage, adv STR. Reduce: halve size, -1d4 damage, disadv STR.”},
+{name:“Knock”,level:2,school:“Transmutation”,castTime:“1 Action”,range:“60 ft”,components:“V”,duration:“Instantaneous”,classes:[“Bard”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Open a locked/stuck door, window, chest, or shackles. Loud bang audible 300ft.”},
+{name:“Levitate”,level:2,school:“Transmutation”,castTime:“1 Action”,range:“60 ft”,components:“V,S,M”,duration:“Conc, 10 min”,classes:[“Artificer”,“Sorcerer”,“Wizard”],saveAtk:“CON Save”,desc:“Raise creature/object (≤500 lbs) 20ft vertically. CON save for unwilling.”},
+{name:“See Invisibility”,level:2,school:“Divination”,castTime:“1 Action”,range:“Self”,components:“V,S,M”,duration:“1 Hour”,classes:[“Artificer”,“Bard”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“See invisible creatures/objects as visible. Also see into Ethereal Plane 60ft.”},
+{name:“Aid”,level:2,school:“Abjuration”,castTime:“1 Action”,range:“30 ft”,components:“V,S,M”,duration:“8 Hours”,classes:[“Artificer”,“Bard”,“Cleric”,“Paladin”,“Ranger”],saveAtk:”—”,desc:“Up to 3 creatures gain +5 max and current HP. +5 per slot above 2nd.”},
+{name:“Cloud of Daggers”,level:2,school:“Conjuration”,castTime:“1 Action”,range:“60 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“5-ft cube of daggers: 4d4 slashing to any creature entering or starting its turn there.”},
+{name:“Heat Metal”,level:2,school:“Transmutation”,castTime:“1 Action”,range:“60 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Artificer”,“Bard”,“Druid”],saveAtk:“CON Save”,desc:“Metal object glows red-hot. 2d8 fire + CON save or drop it. Bonus action each turn.”},
+{name:“Spider Climb”,level:2,school:“Transmutation”,castTime:“1 Action”,range:“Touch”,components:“V,S,M”,duration:“Conc, 1 hr”,classes:[“Artificer”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Climb any surface including ceilings with climbing speed = walking speed.”},
+// 3rd Level
+{name:“Fireball”,level:3,school:“Evocation”,castTime:“1 Action”,range:“150 ft”,components:“V,S,M”,duration:“Instantaneous”,classes:[“Sorcerer”,“Wizard”],saveAtk:“DEX Save”,desc:“20-ft radius: DEX save or 8d6 fire (half on save). Ignites objects. +1d6 per slot.”},
+{name:“Lightning Bolt”,level:3,school:“Evocation”,castTime:“1 Action”,range:“Self (100ft line)”,components:“V,S,M”,duration:“Instantaneous”,classes:[“Sorcerer”,“Wizard”],saveAtk:“DEX Save”,desc:“100-ft line: DEX save or 8d6 lightning (half on save). +1d6 per slot.”},
+{name:“Counterspell”,level:3,school:“Abjuration”,castTime:“1 Reaction”,range:“60 ft”,components:“S”,duration:“Instantaneous”,classes:[“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Auto-cancel spells ≤3rd level. Higher: ability check DC 10 + spell level.”},
+{name:“Fly”,level:3,school:“Transmutation”,castTime:“1 Action”,range:“Touch”,components:“V,S,M”,duration:“Conc, 10 min”,classes:[“Artificer”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“60-ft flying speed. Falls if spell ends mid-air. +1 target per slot above 3rd.”},
+{name:“Haste”,level:3,school:“Transmutation”,castTime:“1 Action”,range:“30 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Artificer”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Speed doubled, +2 AC, adv DEX saves, extra action (Attack×1/Dash/Disengage/Hide). After: 1 turn stunned.”},
+{name:“Dispel Magic”,level:3,school:“Abjuration”,castTime:“1 Action”,range:“120 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Artificer”,“Bard”,“Cleric”,“Druid”,“Paladin”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“End spells ≤3rd level on target. Higher: ability check DC 10 + spell level.”},
+{name:“Hypnotic Pattern”,level:3,school:“Illusion”,castTime:“1 Action”,range:“120 ft”,components:“S,M”,duration:“Conc, 1 min”,classes:[“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“WIS Save”,desc:“30-ft cube: WIS save or charmed + incapacitated + speed 0. Save each turn to end.”},
+{name:“Slow”,level:3,school:“Transmutation”,castTime:“1 Action”,range:“120 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Sorcerer”,“Wizard”],saveAtk:“WIS Save”,desc:“Up to 6: WIS save or speed halved, -2 AC & DEX saves, no reactions, action OR bonus. Save each turn.”},
+{name:“Stinking Cloud”,level:3,school:“Conjuration”,castTime:“1 Action”,range:“90 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Bard”,“Sorcerer”,“Wizard”],saveAtk:“CON Save”,desc:“20-ft radius, heavily obscured. CON save each turn or waste action retching.”},
+{name:“Tongues”,level:3,school:“Divination”,castTime:“1 Action”,range:“Touch”,components:“V,M”,duration:“1 Hour”,classes:[“Bard”,“Cleric”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Understand any spoken language; any creature with a language can understand you.”},
+{name:“Mass Healing Word”,level:3,school:“Evocation”,castTime:“1 Bonus Action”,range:“60 ft”,components:“V”,duration:“Instantaneous”,classes:[“Cleric”],saveAtk:”—”,desc:“Up to 6 creatures regain 1d4 + spellcasting mod HP. +1d4 per slot.”},
+// 4th Level
+{name:“Fireball (Upcast 4th)”,level:4,school:“Evocation”,castTime:“1 Action”,range:“150 ft”,components:“V,S,M”,duration:“Instantaneous”,classes:[“Sorcerer”,“Wizard”],saveAtk:“DEX Save”,desc:“9d6 fire in 20-ft radius. (Fireball cast at 4th level slot.)”},
+{name:“Banishment”,level:4,school:“Abjuration”,castTime:“1 Action”,range:“60 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Cleric”,“Paladin”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“CHA Save”,desc:“CHA save or banished. If maintained 1 min, non-natives stay permanently.”},
+{name:“Blight”,level:4,school:“Necromancy”,castTime:“1 Action”,range:“30 ft”,components:“V,S”,duration:“Instantaneous”,classes:[“Druid”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“CON Save”,desc:“CON save or 8d8 necrotic (half on save). Plants no save/max damage.”},
+{name:“Confusion”,level:4,school:“Enchantment”,castTime:“1 Action”,range:“90 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Bard”,“Druid”,“Sorcerer”,“Wizard”],saveAtk:“WIS Save”,desc:“WIS save or random behavior (roll d10 each turn). Save each turn to end.”},
+{name:“Dimension Door”,level:4,school:“Conjuration”,castTime:“1 Action”,range:“500 ft”,components:“V”,duration:“Instantaneous”,classes:[“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:”—”,desc:“Teleport up to 500ft. Can bring one Medium/smaller willing creature within 5ft.”},
+{name:“Greater Invisibility”,level:4,school:“Illusion”,castTime:“1 Action”,range:“Touch”,components:“V,S”,duration:“Conc, 1 min”,classes:[“Bard”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Invisible even while attacking/casting. Your attacks adv; attacks vs you disadv.”},
+{name:“Ice Storm”,level:4,school:“Evocation”,castTime:“1 Action”,range:“300 ft”,components:“V,S,M”,duration:“Instantaneous”,classes:[“Druid”,“Sorcerer”,“Wizard”],saveAtk:“DEX Save”,desc:“20-ft r, 40-ft cylinder: DEX save or 2d8 bludgeoning + 4d6 cold (half on save). Difficult terrain after.”},
+{name:“Polymorph”,level:4,school:“Transmutation”,castTime:“1 Action”,range:“60 ft”,components:“V,S,M”,duration:“Conc, 1 hr”,classes:[“Bard”,“Druid”,“Sorcerer”,“Wizard”],saveAtk:“WIS Save”,desc:“Transform creature into beast (CR ≤ level/CR). Uses beast stats. Reverts at 0 HP.”},
+{name:“Stoneskin”,level:4,school:“Abjuration”,castTime:“1 Action”,range:“Touch”,components:“V,S,M”,duration:“Conc, 1 hr”,classes:[“Artificer”,“Druid”,“Ranger”,“Sorcerer”,“Wizard”],saveAtk:”—”,desc:“Resistance to bludgeoning, piercing, slashing from nonmagical attacks.”},
+{name:“Wall of Fire”,level:4,school:“Evocation”,castTime:“1 Action”,range:“120 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Druid”,“Sorcerer”,“Wizard”],saveAtk:“DEX Save”,desc:“60×20×1 ft wall. One side: 5d8 fire within 10ft at end of turn. Entering: DEX save or 5d8.”},
+// 5th Level
+{name:“Cone of Cold”,level:5,school:“Evocation”,castTime:“1 Action”,range:“Self (60ft cone)”,components:“V,S,M”,duration:“Instantaneous”,classes:[“Sorcerer”,“Wizard”],saveAtk:“CON Save”,desc:“60-ft cone: CON save or 8d8 cold (half on save). Killed = frozen statue.”},
+{name:“Cloudkill”,level:5,school:“Conjuration”,castTime:“1 Action”,range:“120 ft”,components:“V,S”,duration:“Conc, 10 min”,classes:[“Sorcerer”,“Wizard”],saveAtk:“CON Save”,desc:“20-ft sphere: heavily obscured, CON save or 5d8 poison (half on save). Moves 10ft/turn.”},
+{name:“Hold Monster”,level:5,school:“Enchantment”,castTime:“1 Action”,range:“90 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Bard”,“Sorcerer”,“Warlock”,“Wizard”],saveAtk:“WIS Save”,desc:“Any creature: WIS save or paralyzed. Attacks adv; 5ft hits are crits. +1 target per slot.”},
+{name:“Telekinesis”,level:5,school:“Transmutation”,castTime:“1 Action”,range:“60 ft”,components:“V,S”,duration:“Conc, 10 min”,classes:[“Sorcerer”,“Wizard”],saveAtk:“STR Save”,desc:“Move object (≤1,000 lbs) or creature (STR save or moved 30ft + restrained) 30ft per turn.”},
+{name:“Wall of Force”,level:5,school:“Evocation”,castTime:“1 Action”,range:“120 ft”,components:“V,S,M”,duration:“Conc, 10 min”,classes:[“Wizard”],saveAtk:”—”,desc:“Invisible immune-to-all-damage wall (10 panels). Nothing passes through physically or via teleportation.”},
+{name:“Bigby’s Hand”,level:5,school:“Evocation”,castTime:“1 Action”,range:“120 ft”,components:“V,S,M”,duration:“Conc, 1 min”,classes:[“Artificer”,“Wizard”],saveAtk:“Spell Atk/STR”,desc:“Large magical force hand: Clenched Fist (4d8 force), Forceful Hand (push), Grasping Hand (restrain), Interposing Hand (half cover).”},
+];
+
+const WEAPONS = [
+{name:“Club”,category:“Simple Melee”,damage:“1d4”,dmgType:“Bludgeoning”,weight:2,cost:“1 sp”,properties:“Light”},
+{name:“Dagger”,category:“Simple Melee”,damage:“1d4”,dmgType:“Piercing”,weight:1,cost:“2 gp”,properties:“Finesse, Light, Thrown (20/60)”,desc:“Can use DEX for attack/damage rolls.”},
+{name:“Greatclub”,category:“Simple Melee”,damage:“1d8”,dmgType:“Bludgeoning”,weight:10,cost:“2 sp”,properties:“Two-handed”},
+{name:“Handaxe”,category:“Simple Melee”,damage:“1d6”,dmgType:“Slashing”,weight:2,cost:“5 gp”,properties:“Light, Thrown (20/60)”},
+{name:“Javelin”,category:“Simple Melee”,damage:“1d6”,dmgType:“Piercing”,weight:2,cost:“5 sp”,properties:“Thrown (30/120)”},
+{name:“Light Hammer”,category:“Simple Melee”,damage:“1d4”,dmgType:“Bludgeoning”,weight:2,cost:“2 gp”,properties:“Light, Thrown (20/60)”},
+{name:“Mace”,category:“Simple Melee”,damage:“1d6”,dmgType:“Bludgeoning”,weight:4,cost:“5 gp”,properties:”—”},
+{name:“Quarterstaff”,category:“Simple Melee”,damage:“1d6/1d8”,dmgType:“Bludgeoning”,weight:4,cost:“2 sp”,properties:“Versatile (1d8 two-handed)”},
+{name:“Spear”,category:“Simple Melee”,damage:“1d6/1d8”,dmgType:“Piercing”,weight:3,cost:“1 gp”,properties:“Thrown (20/60), Versatile”},
+{name:“Light Crossbow”,category:“Simple Ranged”,damage:“1d8”,dmgType:“Piercing”,weight:5,cost:“25 gp”,properties:“Ammunition (80/320), Loading, Two-handed”},
+{name:“Shortbow”,category:“Simple Ranged”,damage:“1d6”,dmgType:“Piercing”,weight:2,cost:“25 gp”,properties:“Ammunition (80/320), Two-handed”},
+{name:“Sling”,category:“Simple Ranged”,damage:“1d4”,dmgType:“Bludgeoning”,weight:0,cost:“1 sp”,properties:“Ammunition (30/120)”},
+{name:“Battleaxe”,category:“Martial Melee”,damage:“1d8/1d10”,dmgType:“Slashing”,weight:4,cost:“10 gp”,properties:“Versatile (1d10)”},
+{name:“Flail”,category:“Martial Melee”,damage:“1d8”,dmgType:“Bludgeoning”,weight:2,cost:“10 gp”,properties:”—”},
+{name:“Glaive”,category:“Martial Melee”,damage:“1d10”,dmgType:“Slashing”,weight:6,cost:“20 gp”,properties:“Heavy, Reach, Two-handed”},
+{name:“Greataxe”,category:“Martial Melee”,damage:“1d12”,dmgType:“Slashing”,weight:7,cost:“30 gp”,properties:“Heavy, Two-handed”},
+{name:“Greatsword”,category:“Martial Melee”,damage:“2d6”,dmgType:“Slashing”,weight:6,cost:“50 gp”,properties:“Heavy, Two-handed”},
+{name:“Halberd”,category:“Martial Melee”,damage:“1d10”,dmgType:“Slashing”,weight:6,cost:“20 gp”,properties:“Heavy, Reach, Two-handed”},
+{name:“Lance”,category:“Martial Melee”,damage:“1d12”,dmgType:“Piercing”,weight:6,cost:“10 gp”,properties:“Reach, Disadv within 5ft”},
+{name:“Longsword”,category:“Martial Melee”,damage:“1d8/1d10”,dmgType:“Slashing”,weight:3,cost:“15 gp”,properties:“Versatile (1d10)”,desc:“The classic sword.”},
+{name:“Maul”,category:“Martial Melee”,damage:“2d6”,dmgType:“Bludgeoning”,weight:10,cost:“10 gp”,properties:“Heavy, Two-handed”},
+{name:“Morningstar”,category:“Martial Melee”,damage:“1d8”,dmgType:“Piercing”,weight:4,cost:“15 gp”,properties:”—”},
+{name:“Pike”,category:“Martial Melee”,damage:“1d10”,dmgType:“Piercing”,weight:18,cost:“5 gp”,properties:“Heavy, Reach, Two-handed”},
+{name:“Rapier”,category:“Martial Melee”,damage:“1d8”,dmgType:“Piercing”,weight:2,cost:“25 gp”,properties:“Finesse”,desc:“Can use DEX. Great for DEX fighters.”},
+{name:“Scimitar”,category:“Martial Melee”,damage:“1d6”,dmgType:“Slashing”,weight:3,cost:“25 gp”,properties:“Finesse, Light”,desc:“Light + Finesse: ideal for two-weapon fighting.”},
+{name:“Shortsword”,category:“Martial Melee”,damage:“1d6”,dmgType:“Piercing”,weight:2,cost:“10 gp”,properties:“Finesse, Light”,desc:“Rogue favorite.”},
+{name:“Trident”,category:“Martial Melee”,damage:“1d6/1d8”,dmgType:“Piercing”,weight:4,cost:“5 gp”,properties:“Thrown (20/60), Versatile”},
+{name:“Warhammer”,category:“Martial Melee”,damage:“1d8/1d10”,dmgType:“Bludgeoning”,weight:2,cost:“15 gp”,properties:“Versatile (1d10)”},
+{name:“Whip”,category:“Martial Melee”,damage:“1d4”,dmgType:“Slashing”,weight:3,cost:“2 gp”,properties:“Finesse, Reach”},
+{name:“Hand Crossbow”,category:“Martial Ranged”,damage:“1d6”,dmgType:“Piercing”,weight:3,cost:“75 gp”,properties:“Ammunition (30/120), Light, Loading”},
+{name:“Heavy Crossbow”,category:“Martial Ranged”,damage:“1d10”,dmgType:“Piercing”,weight:18,cost:“50 gp”,properties:“Ammunition (100/400), Heavy, Loading, Two-handed”},
+{name:“Longbow”,category:“Martial Ranged”,damage:“1d8”,dmgType:“Piercing”,weight:2,cost:“50 gp”,properties:“Ammunition (150/600), Heavy, Two-handed”},
+{name:“Net”,category:“Martial Ranged”,damage:”—”,dmgType:”—”,weight:3,cost:“1 gp”,properties:“Thrown (5/15)”,desc:“Restrain up to Large: DC 10 STR or attack to escape.”},
+];
+
+const EQUIPMENT = [
+{name:“Padded Armor”,category:“Light Armor”,ac:“11+DEX”,weight:8,cost:“5 gp”,desc:“Stealth disadvantage.”},
+{name:“Leather Armor”,category:“Light Armor”,ac:“11+DEX”,weight:10,cost:“10 gp”,desc:“No Stealth penalty. Best starter armor.”},
+{name:“Studded Leather”,category:“Light Armor”,ac:“12+DEX”,weight:13,cost:“45 gp”,desc:“Best light armor. No Stealth penalty.”},
+{name:“Hide Armor”,category:“Medium Armor”,ac:“12+DEX(max 2)”,weight:12,cost:“10 gp”,desc:“No Stealth penalty.”},
+{name:“Chain Shirt”,category:“Medium Armor”,ac:“13+DEX(max 2)”,weight:20,cost:“50 gp”,desc:“No Stealth penalty.”},
+{name:“Scale Mail”,category:“Medium Armor”,ac:“14+DEX(max 2)”,weight:45,cost:“50 gp”,desc:“Stealth disadvantage.”},
+{name:“Breastplate”,category:“Medium Armor”,ac:“14+DEX(max 2)”,weight:20,cost:“400 gp”,desc:“Best mid-tier. No Stealth penalty.”},
+{name:“Half Plate”,category:“Medium Armor”,ac:“15+DEX(max 2)”,weight:40,cost:“750 gp”,desc:“Stealth disadvantage.”},
+{name:“Ring Mail”,category:“Heavy Armor”,ac:“14”,weight:40,cost:“30 gp”,desc:“Stealth disadvantage.”},
+{name:“Chain Mail”,category:“Heavy Armor”,ac:“16”,weight:55,cost:“75 gp”,desc:“STR 13 required. Stealth disadvantage.”},
+{name:“Splint Armor”,category:“Heavy Armor”,ac:“17”,weight:60,cost:“200 gp”,desc:“STR 15 required. Stealth disadvantage.”},
+{name:“Plate Armor”,category:“Heavy Armor”,ac:“18”,weight:65,cost:“1,500 gp”,desc:“Best armor. STR 15 required. Stealth disadvantage.”},
+{name:“Shield”,category:“Shield”,ac:”+2”,weight:6,cost:“10 gp”,desc:”+2 AC. Can’t use with two-handed weapons.”},
+{name:“Backpack”,category:“Gear”,weight:5,cost:“2 gp”,desc:“Holds 30 lbs / 1 cubic ft.”},
+{name:“Bedroll”,category:“Gear”,weight:7,cost:“1 gp”,desc:“For sleeping outdoors.”},
+{name:“Climber’s Kit”,category:“Gear”,weight:12,cost:“25 gp”,desc:“Advantage on Athletics checks to climb.”},
+{name:“Crowbar”,category:“Gear”,weight:5,cost:“2 gp”,desc:“Advantage on STR checks where leverage applies.”},
+{name:“Grappling Hook”,category:“Gear”,weight:4,cost:“2 gp”,desc:“Use with rope to scale walls.”},
+{name:“Healer’s Kit”,category:“Gear”,weight:3,cost:“5 gp”,desc:“10 uses. Stabilize dying without Medicine check.”},
+{name:“Holy Symbol”,category:“Gear”,weight:1,cost:“5 gp”,desc:“Spellcasting focus for Clerics and Paladins.”},
+{name:“Lantern, Bullseye”,category:“Gear”,weight:2,cost:“10 gp”,desc:“Bright 60-ft cone, dim 120-ft cone.”},
+{name:“Lantern, Hooded”,category:“Gear”,weight:2,cost:“5 gp”,desc:“Bright 30ft, dim 60ft. Can be hooded.”},
+{name:“Mirror, Steel”,category:“Gear”,weight:0.5,cost:“5 gp”,desc:“Small hand-held steel mirror.”},
+{name:“Oil (flask)”,category:“Gear”,weight:1,cost:“1 sp”,desc:“Lantern fuel. Throwable: DEX DC 10 or 5 fire×2 rounds.”},
+{name:“Poison, Basic”,category:“Gear”,weight:0,cost:“100 gp”,desc:“Coat weapon: first hit DC 10 CON or 1d4 poison.”},
+{name:“Rations (1 day)”,category:“Gear”,weight:2,cost:“5 sp”,desc:“1 day of trail rations.”},
+{name:“Rope, Hempen (50ft)”,category:“Gear”,weight:10,cost:“1 gp”,desc:“2 HP, AC 11. DC 17 STR to break.”},
+{name:“Rope, Silk (50ft)”,category:“Gear”,weight:5,cost:“10 gp”,desc:“3 HP. Lighter than hemp.”},
+{name:“Spellbook”,category:“Gear”,weight:3,cost:“50 gp”,desc:“100 pages. Required for Wizards.”},
+{name:“Thieves’ Tools”,category:“Gear”,weight:1,cost:“25 gp”,desc:“Pick locks, disarm traps. Proficiency required.”},
+{name:“Tinderbox”,category:“Gear”,weight:1,cost:“5 sp”,desc:“Strike a flame in 1 action.”},
+{name:“Torch”,category:“Gear”,weight:1,cost:“1 cp”,desc:“Bright 20ft, dim 20ft, 1 hour. Improvised club: 1d4 fire.”},
+{name:“Tinker’s Tools”,category:“Tools”,weight:10,cost:“50 gp”,desc:“Construct and repair mechanical devices.”},
+{name:“Alchemist’s Supplies”,category:“Tools”,weight:8,cost:“50 gp”,desc:“Create and identify alchemical substances.”},
+{name:“Disguise Kit”,category:“Tools”,weight:3,cost:“25 gp”,desc:“Create disguises; aids Deception/Performance.”},
+{name:“Herbalism Kit”,category:“Tools”,weight:3,cost:“5 gp”,desc:“Identify plants, make antitoxin.”},
+{name:“Poisoner’s Kit”,category:“Tools”,weight:2,cost:“50 gp”,desc:“Create and identify poisons.”},
+{name:“Smith’s Tools”,category:“Tools”,weight:8,cost:“20 gp”,desc:“Craft/repair metal items and armor.”},
+];
+
+const POTIONS = [
+{name:“Potion of Healing”,rarity:“Common”,weight:0.5,cost:“50 gp”,effect:“Restore 2d4+2 HP (action to use).”,desc:“A red glimmering liquid. The most common healing potion.”},
+{name:“Potion of Greater Healing”,rarity:“Uncommon”,weight:0.5,cost:“100 gp”,effect:“Restore 4d4+4 HP.”,desc:“Brighter red. Doubled healing over basic.”},
+{name:“Potion of Superior Healing”,rarity:“Rare”,weight:0.5,cost:“500 gp”,effect:“Restore 8d4+8 HP.”,desc:“Vivid red. Substantial healing.”},
+{name:“Potion of Supreme Healing”,rarity:“Very Rare”,weight:0.5,cost:“1,350 gp”,effect:“Restore 10d4+20 HP.”,desc:“Near-complete restoration.”},
+{name:“Antitoxin”,rarity:“Common”,weight:0,cost:“50 gp”,effect:“Advantage on poison saves for 1 hour. Not magical.”,desc:“Pale green liquid.”},
+{name:“Potion of Climbing”,rarity:“Common”,weight:0.5,cost:“180 gp”,effect:“Climbing speed = walking speed, adv Athletics to climb, 1 hour.”,desc:“Brown, silver, and gray layered liquid.”},
+{name:“Potion of Animal Friendship”,rarity:“Uncommon”,weight:0.5,cost:“100 gp”,effect:“Cast Animal Friendship (DC 13) for 1 hour.”,desc:“Befriend beasts temporarily.”},
+{name:“Potion of Flying”,rarity:“Very Rare”,weight:0.5,cost:“500 gp”,effect:“Flying speed = walking speed, can hover, 1 hour. Falls if it ends mid-air.”,desc:“Clear with white motes inside.”},
+{name:“Potion of Gaseous Form”,rarity:“Rare”,weight:0.5,cost:“300 gp”,effect:“Gaseous Form for 1 hour. Resist non-magical damage, fly 10ft, can’t attack.”,desc:“Milky white releasing faint gas.”},
+{name:“Potion of Giant Strength (Hill)”,rarity:“Uncommon”,weight:0.5,cost:“200 gp”,effect:“STR becomes 21 for 1 hour.”,desc:“Clear with nail inside.”},
+{name:“Potion of Giant Strength (Stone)”,rarity:“Rare”,weight:0.5,cost:“400 gp”,effect:“STR becomes 23 for 1 hour.”,desc:“Opaque with small stone.”},
+{name:“Potion of Giant Strength (Fire)”,rarity:“Rare”,weight:0.5,cost:“400 gp”,effect:“STR becomes 25 for 1 hour.”,desc:“Red with flame inside.”},
+{name:“Potion of Giant Strength (Cloud)”,rarity:“Very Rare”,weight:0.5,cost:“1,300 gp”,effect:“STR becomes 27 for 1 hour.”,desc:“White with wisps of cloud.”},
+{name:“Potion of Giant Strength (Storm)”,rarity:“Legendary”,weight:0.5,cost:“50,000 gp”,effect:“STR becomes 29 for 1 hour.”,desc:“Blue-gray with swirling storm.”},
+{name:“Potion of Heroism”,rarity:“Rare”,weight:0.5,cost:“180 gp”,effect:“10 temp HP + Bless effect for 1 hour.”,desc:“Blue bubbling liquid.”},
+{name:“Potion of Invisibility”,rarity:“Very Rare”,weight:0.5,cost:“180 gp”,effect:“Invisible for 1 hour or until you attack/cast.”,desc:“Looks like an empty vial.”},
+{name:“Potion of Invulnerability”,rarity:“Rare”,weight:0.5,cost:“3,000 gp”,effect:“Resistance to ALL damage for 1 minute.”,desc:“Metallic liquid.”},
+{name:“Potion of Mind Reading”,rarity:“Rare”,weight:0.5,cost:“180 gp”,effect:“Detect Thoughts (DC 13) for 1 minute.”,desc:“Clear fluid shifting to eye color.”},
+{name:“Potion of Poison”,rarity:“Uncommon (Cursed)”,weight:0.5,cost:“100 gp”,effect:“Looks like healing! 3d6 poison + poisoned 24 hrs (CON DC 13/hr).”,desc:“Identical to healing potion. Beware.”},
+{name:“Potion of Resistance”,rarity:“Uncommon”,weight:0.5,cost:“300 gp”,effect:“Resistance to one damage type for 1 hour (fire, cold, lightning, etc.).”,desc:“Multiple color variants.”},
+{name:“Potion of Speed”,rarity:“Very Rare”,weight:0.5,cost:“400 gp”,effect:“Haste for 1 minute. After: can’t move or act for 1 turn.”,desc:“Yellow with black streaks.”},
+{name:“Potion of Water Breathing”,rarity:“Uncommon”,weight:0.5,cost:“180 gp”,effect:“Breathe underwater for 1 hour.”,desc:“Cloudy green, smells of the sea.”},
+{name:“Oil of Sharpness”,rarity:“Very Rare”,weight:0.5,cost:“3,200 gp”,effect:“Apply to weapon (1 min): +3 attack and damage for 1 hour.”,desc:“Clear, slightly oily.”},
+{name:“Oil of Slipperiness”,rarity:“Uncommon”,weight:0.5,cost:“480 gp”,effect:“Freedom of Movement 8 hours, or coat 10-ft square as Grease 8 hrs.”,desc:“Slick syrupy substance.”},
+];
+
+// ── CONSTANTS ─────────────────────────────────────────────────────────────────
+const ABS=[{id:“str”,s:“STR”},{id:“dex”,s:“DEX”},{id:“con”,s:“CON”},{id:“int”,s:“INT”},{id:“wis”,s:“WIS”},{id:“cha”,s:“CHA”}];
+const SKS=[{n:“Acrobatics”,a:“dex”},{n:“Animal Handling”,a:“wis”},{n:“Arcana”,a:“int”},{n:“Athletics”,a:“str”},{n:“Deception”,a:“cha”},{n:“History”,a:“int”},{n:“Insight”,a:“wis”},{n:“Intimidation”,a:“cha”},{n:“Investigation”,a:“int”},{n:“Medicine”,a:“wis”},{n:“Nature”,a:“int”},{n:“Perception”,a:“wis”},{n:“Performance”,a:“cha”},{n:“Persuasion”,a:“cha”},{n:“Religion”,a:“int”},{n:“Sleight of Hand”,a:“dex”},{n:“Stealth”,a:“dex”},{n:“Survival”,a:“wis”}];
+const CLASSES=[””,“Artificer”,“Barbarian”,“Bard”,“Cleric”,“Druid”,“Fighter”,“Monk”,“Paladin”,“Ranger”,“Rogue”,“Sorcerer”,“Warlock”,“Wizard”];
+const RACES=[””,“Aasimar”,“Dragonborn”,“Dwarf”,“Elf”,“Gnome”,“Goliath”,“Half-Elf”,“Half-Orc”,“Halfling”,“Human”,“Kenku”,“Tabaxi”,“Tiefling”,“Yuan-ti”,“Custom”];
+const BGDS=[””,“Acolyte”,“Charlatan”,“Criminal”,“Entertainer”,“Folk Hero”,“Guild Artisan”,“Guild Merc”,“Hermit”,“Noble”,“Outlander”,“Sage”,“Sailor”,“Soldier”,“Urchin”];
+const ALIGNS=[””,“Lawful Good”,“Neutral Good”,“Chaotic Good”,“Lawful Neutral”,“True Neutral”,“Chaotic Neutral”,“Lawful Evil”,“Neutral Evil”,“Chaotic Evil”];
+const CASTA={Artificer:“int”,Bard:“cha”,Cleric:“wis”,Druid:“wis”,Paladin:“cha”,Ranger:“wis”,Sorcerer:“cha”,Warlock:“cha”,Wizard:“int”};
+const CONDS=[“Blinded”,“Charmed”,“Deafened”,“Exhaustion”,“Frightened”,“Grappled”,“Incapacitated”,“Invisible”,“Paralyzed”,“Petrified”,“Poisoned”,“Prone”,“Restrained”,“Stunned”,“Unconscious”];
+const SLOTS_MAP={Artificer:[2,2,0,0,0],Bard:[4,3,3,1,0],Cleric:[4,3,3,2,1],Druid:[4,3,3,2,1],Paladin:[4,3,0,0,0],Ranger:[0,3,0,0,0],Sorcerer:[4,3,3,2,1],Warlock:[2,0,0,0,0],Wizard:[4,3,3,2,1]};
+
+const gm=s=>Math.floor(((parseInt(s)||10)-10)/2);
+const fm=m=>(m>=0?”+”:””)+m;
+const gp=l=>Math.ceil((parseInt(l)||1)/4)+1;
+const defChar=()=>({name:””,charClass:””,race:””,background:””,alignment:””,level:1,xp:0,subclass:””,deity:””,str:10,dex:10,con:10,int:10,wis:10,cha:10,ac:10,speed:30,hpMax:8,hpCur:8,hpTemp:0,hitDice:“1d8”,inspiration:false,skillProf:{},saveProf:{},dsS:0,dsF:0,conditions:[],attacks:[{name:“Unarmed Strike”,toHit:”+0”,damage:“1+STR”,dmgType:“Bludgeoning”}],inventory:[],spells:[],slotsUsed:{},cp:0,sp:0,ep:0,gp:0,pp:0,personality:””,ideals:””,bonds:””,flaws:””,backstory:””,features:””,notes:””,profTags:[],age:””,height:””,weight:””,eyes:””,hair:””,skin:””,party:[],msgs:[]});
+
+// ── STYLES ────────────────────────────────────────────────────────────────────
+const ink=”#1a1208”,ink2=”#3d2b1a”,parch=”#f5e6c8”,gold=”#c9973a”,goldb=”#e8b84b”,goldd=”#8b6520”,red=”#7a1c1c”,blue=”#1a2f5a”;
+const T={
+body:{minHeight:“100vh”,background:”#0a0603”,fontFamily:”‘Crimson Text’,Georgia,serif”,padding:“10px 8px 50px”},
+sheet:{background:“linear-gradient(150deg,#f8ecd2,#f0ddb0 50%,#e8d09e)”,border:“2px solid #8b6520”,borderRadius:3,padding:“16px 14px”,maxWidth:660,margin:“0 auto”,boxShadow:“0 16px 60px rgba(0,0,0,.75)”},
+h1:{fontFamily:”‘Cinzel Decorative’,serif”,textAlign:“center”,color:goldb,fontSize:“clamp(1.2rem,4vw,1.85rem)”,textShadow:“0 0 30px rgba(201,151,58,.5)”,marginBottom:2},
+sub:{fontFamily:”‘Cinzel’,serif”,textAlign:“center”,color:goldd,fontSize:”.52rem”,letterSpacing:”.2em”,textTransform:“uppercase”,marginBottom:12},
+dvd:{display:“flex”,alignItems:“center”,gap:8,margin:“12px 0 8px”},
+dl:{flex:1,height:1,background:“linear-gradient(to right,transparent,#8b6520,transparent)”},
+dt:{fontFamily:”‘Cinzel’,serif”,fontSize:”.53rem”,letterSpacing:”.18em”,textTransform:“uppercase”,color:goldd,whiteSpace:“nowrap”},
+lbl:{fontFamily:”‘Cinzel’,serif”,fontSize:”.52rem”,letterSpacing:”.12em”,textTransform:“uppercase”,color:goldd},
+inp:{background:“transparent”,border:“none”,borderBottom:“1px solid #8b6520”,padding:“3px 2px”,fontFamily:”‘Crimson Text’,Georgia,serif”,fontSize:”.93rem”,color:ink,outline:“none”,width:“100%”},
+inpLg:{background:“transparent”,border:“none”,borderBottom:“1.5px solid #8b6520”,padding:“4px 2px”,fontFamily:”‘Cinzel’,serif”,fontSize:“1.25rem”,fontWeight:600,color:ink,outline:“none”,width:“100%”},
+sel:{background:“transparent”,border:“none”,borderBottom:“1px solid #8b6520”,padding:“3px 2px”,fontFamily:”‘Crimson Text’,Georgia,serif”,fontSize:”.93rem”,color:ink,outline:“none”,width:“100%”,cursor:“pointer”,appearance:“none”},
+ta:{background:“rgba(139,101,32,.05)”,border:“1px solid rgba(139,101,32,.3)”,borderRadius:2,padding:7,fontFamily:”‘Crimson Text’,Georgia,serif”,fontSize:”.9rem”,color:ink,resize:“vertical”,outline:“none”,lineHeight:1.5,width:“100%”,boxSizing:“border-box”},
+g2:{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:“9px 13px”},
+g3:{display:“grid”,gridTemplateColumns:“1fr 1fr 1fr”,gap:8},
+g4:{display:“grid”,gridTemplateColumns:“repeat(4,1fr)”,gap:7},
+g5:{display:“grid”,gridTemplateColumns:“repeat(5,1fr)”,gap:5},
+g6:{display:“grid”,gridTemplateColumns:“repeat(6,1fr)”,gap:5},
+sb:{background:“rgba(139,101,32,.08)”,border:“1.5px solid #8b6520”,borderRadius:2,padding:“7px 5px”,textAlign:“center”},
+sbI:{background:“transparent”,border:“none”,borderBottom:“1px solid #8b6520”,fontFamily:”‘Cinzel’,serif”,fontSize:“1.1rem”,fontWeight:600,color:ink,outline:“none”,textAlign:“center”,width:“100%”},
+sbV:{fontFamily:”‘Cinzel’,serif”,fontSize:“1.2rem”,fontWeight:700,color:ink,paddingTop:2},
+ab:{background:“rgba(139,101,32,.08)”,border:“1.5px solid #8b6520”,borderRadius:2,padding:“6px 3px 5px”,textAlign:“center”,display:“flex”,flexDirection:“column”,alignItems:“center”,gap:2},
+abSc:{background:“transparent”,border:“none”,borderBottom:“1px solid #8b6520”,fontFamily:”‘Cinzel’,serif”,fontSize:“1.2rem”,fontWeight:700,color:ink,outline:“none”,textAlign:“center”,width:42},
+abM:{width:26,height:26,border:“1.5px solid #8b6520”,borderRadius:“50%”,background:“rgba(245,230,200,.9)”,display:“flex”,alignItems:“center”,justifyContent:“center”,fontFamily:”‘Cinzel’,serif”,fontSize:”.68rem”,fontWeight:600,color:ink,marginTop:2},
+nt:a=>({padding:“7px 3px”,border:`1.5px solid ${a?"#8b6520":"rgba(139,101,32,.38)"}`,borderRadius:2,background:a?“rgba(139,101,32,.18)”:“transparent”,fontFamily:”‘Cinzel’,serif”,fontSize:”.52rem”,letterSpacing:”.07em”,textTransform:“uppercase”,color:a?ink:goldd,cursor:“pointer”,textAlign:“center”,transition:“all .2s”}),
+pip:p=>({width:12,height:12,borderRadius:“50%”,flexShrink:0,cursor:“pointer”,border:“1.5px solid #8b6520”,background:p===0?“transparent”:p===1?”#8b6520”:goldb,transition:“all .15s”}),
+btn:v=>({fontFamily:”‘Cinzel’,serif”,fontSize:”.6rem”,letterSpacing:”.12em”,textTransform:“uppercase”,padding:“7px 16px”,cursor:“pointer”,border:“1.5px solid #8b6520”,borderRadius:2,transition:“all .2s”,background:v===“p”?”#8b6520”:v===“b”?”#1a2f5a”:“transparent”,color:v===“p”||v===“b”?”#f5e6c8”:goldd}),
+bts:v=>({fontFamily:”‘Cinzel’,serif”,fontSize:”.55rem”,letterSpacing:”.1em”,textTransform:“uppercase”,padding:“4px 10px”,cursor:“pointer”,border:“1.5px solid #8b6520”,borderRadius:2,background:v===“p”?”#8b6520”:“transparent”,color:v===“p”?”#f5e6c8”:goldd,transition:“all .2s”}),
+bdg:c=>({fontFamily:”‘Cinzel’,serif”,fontSize:”.44rem”,padding:“2px 5px”,borderRadius:10,textTransform:“uppercase”,letterSpacing:”.05em”,background:c===“b”?“rgba(26,47,90,.12)”:c===“r”?“rgba(122,28,28,.12)”:c===“g”?“rgba(28,74,28,.12)”:“rgba(139,101,32,.15)”,color:c===“b”?”#1a2f5a”:c===“r”?”#7a1c1c”:c===“g”?”#1c4a1c”:goldd}),
+modal:{position:“fixed”,inset:0,background:“rgba(10,6,3,.85)”,zIndex:999,display:“flex”,alignItems:“flex-start”,justifyContent:“center”,padding:“12px 8px”,overflowY:“auto”},
+mbox:{background:“linear-gradient(150deg,#f8ecd2,#f0ddb0)”,border:“2px solid #8b6520”,borderRadius:3,padding:“16px 14px”,width:“100%”,maxWidth:540,maxHeight:“88vh”,overflowY:“auto”},
+srch:{width:“100%”,background:“rgba(139,101,32,.07)”,border:“1.5px solid #8b6520”,borderRadius:2,padding:“8px 10px”,fontFamily:”‘Crimson Text’,serif”,fontSize:”.93rem”,color:ink,outline:“none”,marginBottom:8,boxSizing:“border-box”},
+card:{background:“rgba(139,101,32,.06)”,border:“1px solid rgba(139,101,32,.25)”,borderRadius:2,padding:“8px 10px”,marginBottom:5,cursor:“pointer”,transition:“border-color .15s”},
+tst:s=>({position:“fixed”,bottom:18,left:“50%”,transform:`translateX(-50%) translateY(${s?0:14}px)`,background:ink,color:goldb,fontFamily:”‘Cinzel’,serif”,fontSize:”.65rem”,letterSpacing:”.1em”,textTransform:“uppercase”,padding:“9px 20px”,border:“1px solid #8b6520”,borderRadius:2,opacity:s?1:0,transition:“all .3s”,pointerEvents:“none”,zIndex:9999,whiteSpace:“nowrap”}),
+};
+
+// ── DB MODAL ──────────────────────────────────────────────────────────────────
+function Modal({title,items,fkey,onAdd,onClose,Card}){
+const[q,setQ]=useState(””);
+const[cat,setCat]=useState(“All”);
+const[open,setOpen]=useState(null);
+const cats=[“All”,…new Set(items.map(i=>i[fkey]||””).filter(Boolean))].sort((a,b)=>a===“All”?-1:b===“All”?1:a.localeCompare(b));
+const list=items.filter(it=>{
+const h=(it.name+” “+(it.desc||””)+” “+(it[fkey]||””)+” “+((it.classes||[]).join(” “))).toLowerCase();
+return h.includes(q.toLowerCase())&&(cat===“All”||(it[fkey]||””)===cat);
+});
+return(
+<div style={T.modal} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+<div style={T.mbox}>
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:10}}>
+<span style={{fontFamily:”‘Cinzel Decorative’,serif”,fontSize:”.9rem”,color:goldb}}>{title}</span>
+<button onClick={onClose} style={{background:“transparent”,border:“none”,fontSize:“1.3rem”,color:goldd,cursor:“pointer”}}>×</button>
+</div>
+<input style={T.srch} placeholder=“Search…” value={q} onChange={e=>setQ(e.target.value)} autoFocus/>
+<div style={{display:“flex”,gap:3,flexWrap:“wrap”,marginBottom:8}}>
+{cats.map(c=><button key={c} onClick={()=>setCat(c)} style={{…T.bts(c===cat?“p”:””),fontSize:”.44rem”,padding:“2px 7px”}}>{c}</button>)}
+</div>
+<div style={{fontSize:”.72rem”,color:ink2,fontStyle:“italic”,marginBottom:6}}>{list.length} results — click to expand · ＋ to add</div>
+{list.slice(0,80).map((item,i)=>(
+<div key={i} style={{…T.card,borderColor:open===i?”#8b6520”:“rgba(139,101,32,.25)”}} onClick={()=>setOpen(open===i?null:i)}>
+<Card item={item} expanded={open===i} onAdd={()=>{onAdd(item);onClose();}}/>
+</div>
+))}
+{!list.length&&<div style={{textAlign:“center”,color:goldd,fontStyle:“italic”,padding:20}}>No results found.</div>}
+</div>
+</div>
+);
+}
+
+// ── MAIN APP ──────────────────────────────────────────────────────────────────
+function App(){
+const[chars,setChars]=useState([defChar()]);
+const[ai,setAi]=useState(0);
+const[tab,setTab]=useState(“hero”);
+const[modal,setModal]=useState(null);
+const[toast,setToast]=useState({s:false,m:””});
+const[roll,setRoll]=useState(null);
+const[hist,setHist]=useState([]);
+const[expSp,setExpSp]=useState(null);
+const[spF,setSpF]=useState(-1);
+const[msgIn,setMsgIn]=useState(””);
+const[recs,setRecs]=useState([]);
+const[ptTxt,setPtTxt]=useState(””);
+const[sess,setSess]=useState(false);
+
+const c=chars[ai];
+const upd=useCallback((f,v)=>{setChars(p=>{const n=[…p];n[ai]={…n[ai],[f]:v};return n;});},[ai]);
+const prof=gp(c.level);
+const ca=CASTA[c.charClass];
+const cm=ca?gm(c[ca]):0;
+const slots=SLOTS_MAP[c.charClass]||[];
+const hasSp=slots.some(s=>s>0);
+const pp=10+gm(c.wis)+((c.skillProf[“Perception”]||0)===1?prof:(c.skillProf[“Perception”]||0)===2?prof*2:0);
+const showToast=m=>{setToast({s:true,m});setTimeout(()=>setToast({s:false,m:””}),2100);};
+const doRoll=(sides,lbl,mod=0)=>{const r=Math.floor(Math.random()*sides)+1;const t=r+mod;setRoll({v:t,r,lbl,mod,sides,crit:r===sides&&sides===20,fumble:r===1&&sides===20});setHist(p=>[{v:t,lbl,crit:r===sides&&sides===20,fumble:r===1&&sides===20,time:new Date().toLocaleTimeString([],{hour:“2-digit”,minute:“2-digit”})},…p.slice(0,19)]);};
+
+const D=({l})=>(<div style={T.dvd}><div style={T.dl}/><span style={T.dt}>{l}</span><div style={T.dl}/></div>);
+const FG=({label,id,type=“text”,ph=””,lg,opts,min,max,rows})=>(
+<div style={{display:“flex”,flexDirection:“column”,gap:3}}>
+<label style={T.lbl}>{label}</label>
+{rows?<textarea style={{…T.ta,minHeight:rows*22}} rows={rows} value={c[id]||””} placeholder={ph} onChange={e=>upd(id,e.target.value)}/>
+:opts?<select style={T.sel} value={c[id]||””} onChange={e=>upd(id,e.target.value)}>{opts.map(o=><option key={o} value={o}>{o||”— Select —”}</option>)}</select>
+:<input style={lg?T.inpLg:T.inp} type={type} min={min} max={max} value={c[id]||””} placeholder={ph} onChange={e=>upd(id,type===“number”?Number(e.target.value):e.target.value)}/>}
+</div>
+);
+
+const N1=[{id:“hero”,l:“⚔ Hero”},{id:“combat”,l:“🛡 Combat”},{id:“spells”,l:“✨ Spells”},{id:“skills”,l:“🎯 Skills”}];
+const N2=[{id:“gear”,l:“🎒 Gear”},{id:“lore”,l:“📖 Lore”},{id:“dice”,l:“🎲 Dice”},{id:“party”,l:“💬 Party”}];
+
+return(
+<div style={T.body}>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<div style={T.sheet}>
+<div style={T.h1}>Tavern Ledger</div>
+<div style={T.sub}>D&D 5e · Full Character Sheet</div>
+
+```
+    {/* Char tabs */}
+    <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:10,alignItems:"center"}}>
+      {chars.map((ch,i)=><button key={i} onClick={()=>setAi(i)} style={{...T.nt(i===ai),flex:"none",fontSize:".58rem",padding:"5px 10px"}}>{ch.name||`Hero ${i+1}`}</button>)}
+      <button onClick={()=>{setChars(p=>[...p,defChar()]);setAi(chars.length);}} style={{padding:"5px 10px",border:"1.5px dashed rgba(139,101,32,.5)",borderRadius:2,background:"transparent",color:goldd,fontFamily:"'Cinzel',serif",fontSize:".75rem",cursor:"pointer"}}>＋</button>
+    </div>
+
+    {/* Nav */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:3,marginBottom:3}}>
+      {N1.map(t=><button key={t.id} style={T.nt(tab===t.id)} onClick={()=>setTab(t.id)}>{t.l}</button>)}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:3,marginBottom:14}}>
+      {N2.map(t=><button key={t.id} style={T.nt(tab===t.id)} onClick={()=>setTab(t.id)}>{t.l}</button>)}
+    </div>
+
+    {/* ═══ HERO ═══ */}
+    {tab==="hero"&&(
+      <div>
+        <D l="Identity"/>
+        <div style={{marginBottom:10}}><div style={{display:"flex",flexDirection:"column",gap:3}}><label style={T.lbl}>Character Name</label><input style={T.inpLg} value={c.name} placeholder="Enter your character's name…" onChange={e=>upd("name",e.target.value)}/></div></div>
+        <div style={{...T.g2,marginBottom:10}}>
+          <FG label="Class" id="charClass" opts={CLASSES}/>
+          <FG label="Subclass" id="subclass" ph="e.g. Evocation, Champion…"/>
+          <FG label="Race" id="race" opts={RACES}/>
+          <FG label="Background" id="background" opts={BGDS}/>
+          <FG label="Alignment" id="alignment" opts={ALIGNS}/>
+          <FG label="Deity / Patron" id="deity" ph="e.g. Lathander"/>
+          <FG label="Level" id="level" type="number" min={1} max={20}/>
+          <FG label="Experience" id="xp" type="number" min={0}/>
+        </div>
+        {(c.charClass==="Sorcerer"||c.charClass==="Wizard"||c.charClass==="Warlock")&&(
+          <div style={{background:"rgba(26,47,90,.08)",border:"1px solid rgba(26,47,90,.3)",borderRadius:2,padding:"8px 10px",marginBottom:10,fontSize:".82rem",color:"#1a2f5a",lineHeight:1.6}}>
+            <strong style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",textTransform:"uppercase",letterSpacing:".1em"}}>⚡ AC Tip: </strong>
+            No armor proficiency. Unarmored AC = 10 + DEX ({fm(gm(c.dex))}) = <strong>{10+gm(c.dex)}</strong>. 
+            Cast <strong>Mage Armor</strong> → AC <strong>{13+gm(c.dex)}</strong>. 
+            Use <strong>Shield</strong> reaction for +5 AC when hit.
+          </div>
+        )}
+        <D l="Ability Scores"/>
+        <div style={{...T.g6,marginBottom:10}}>
+          {ABS.map(ab=>{const mod=gm(c[ab.id]);return(
+            <div key={ab.id} style={T.ab}>
+              <span style={{fontFamily:"'Cinzel',serif",fontSize:".45rem",letterSpacing:".1em",textTransform:"uppercase",color:goldd}}>{ab.s}</span>
+              <input style={T.abSc} type="number" min={1} max={30} value={c[ab.id]} onChange={e=>upd(ab.id,Number(e.target.value))}/>
+              <div style={T.abM}>{fm(mod)}</div>
+            </div>
+          );})}
+        </div>
+        <D l="Appearance"/>
+        <div style={T.g2}>
+          <FG label="Age" id="age"/><FG label="Height" id="height"/><FG label="Weight" id="weight"/><FG label="Eyes" id="eyes"/><FG label="Hair" id="hair"/><FG label="Skin" id="skin"/>
+        </div>
+      </div>
+    )}
+
+    {/* ═══ COMBAT ═══ */}
+    {tab==="combat"&&(
+      <div>
+        <D l="Vital Stats"/>
+        <div style={{...T.g3,marginBottom:9}}>
+          <div style={T.sb}><div style={T.lbl}>Armor Class</div><input style={T.sbI} type="number" value={c.ac} onChange={e=>upd("ac",Number(e.target.value))}/></div>
+          <div style={T.sb}><div style={T.lbl}>Initiative</div><div style={T.sbV}>{fm(gm(c.dex))}</div></div>
+          <div style={T.sb}><div style={T.lbl}>Speed (ft)</div><input style={T.sbI} type="number" value={c.speed} onChange={e=>upd("speed",Number(e.target.value))}/></div>
+          <div style={{...T.sb,gridColumn:"span 2"}}><div style={T.lbl}>Hit Points (Current / Max)</div>
+            <div style={{display:"flex",alignItems:"baseline",justifyContent:"center",gap:4}}>
+              <input style={{...T.sbI,color:red,borderBottomColor:red,fontSize:"1.4rem",fontWeight:700,width:48}} type="number" value={c.hpCur} onChange={e=>upd("hpCur",Number(e.target.value))}/>
+              <span style={{color:goldd}}>/</span>
+              <input style={{...T.sbI,fontSize:".9rem",width:40}} type="number" value={c.hpMax} onChange={e=>upd("hpMax",Number(e.target.value))}/>
+            </div>
+          </div>
+          <div style={T.sb}><div style={T.lbl}>Temp HP</div><input style={{...T.sbI,color:blue}} type="number" value={c.hpTemp} onChange={e=>upd("hpTemp",Number(e.target.value))}/></div>
+        </div>
+        <div style={{...T.g4,marginBottom:9}}>
+          <div style={T.sb}><div style={T.lbl}>Prof Bonus</div><div style={T.sbV}>{fm(prof)}</div></div>
+          <div style={T.sb}><div style={T.lbl}>Hit Dice</div><input style={T.sbI} type="text" value={c.hitDice} onChange={e=>upd("hitDice",e.target.value)}/></div>
+          <div style={T.sb}><div style={T.lbl}>Pass Percep</div><div style={T.sbV}>{pp}</div></div>
+          <div style={{...T.sb,cursor:"pointer",borderColor:c.inspiration?goldb:goldd,background:c.inspiration?"rgba(232,184,75,.12)":"rgba(139,101,32,.08)"}} onClick={()=>upd("inspiration",!c.inspiration)}>
+            <div style={{fontSize:"1.3rem",color:c.inspiration?goldb:goldd}}>{c.inspiration?"★":"☆"}</div>
+            <div style={{fontFamily:"'Cinzel',serif",fontSize:".45rem",textTransform:"uppercase",color:goldd}}>Inspiration</div>
+          </div>
+        </div>
+
+        <D l="Attacks"/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 44px 56px 44px",gap:5,padding:"4px 6px",background:"rgba(139,101,32,.1)",border:"1.5px solid #8b6520",borderRadius:"2px 2px 0 0"}}>
+          {["Attack","Hit","Dmg",""].map(h=><span key={h} style={{fontFamily:"'Cinzel',serif",fontSize:".44rem",textTransform:"uppercase",color:goldd,textAlign:"center"}}>{h}</span>)}
+        </div>
+        {c.attacks.map((atk,i)=>(
+          <div key={i} style={{display:"grid",gridTemplateColumns:"1fr 44px 56px 44px",gap:5,padding:"4px 6px",background:i%2===0?"rgba(139,101,32,.04)":"transparent",border:"1px solid rgba(139,101,32,.2)",borderTop:"none",alignItems:"center"}}>
+            <input value={atk.name} onChange={e=>{const a=[...c.attacks];a[i]={...a[i],name:e.target.value};upd("attacks",a);}} style={{background:"transparent",border:"none",borderBottom:"1px solid rgba(139,101,32,.3)",outline:"none",fontFamily:"'Cinzel',serif",fontSize:".7rem",fontWeight:600,color:ink,width:"100%"}}/>
+            <input value={atk.toHit} onChange={e=>{const a=[...c.attacks];a[i]={...a[i],toHit:e.target.value};upd("attacks",a);}} style={{width:"100%",textAlign:"center",background:"transparent",border:"1px solid rgba(26,47,90,.35)",borderRadius:2,outline:"none",fontFamily:"'Cinzel',serif",fontSize:".75rem",fontWeight:700,color:blue,padding:"2px 0"}}/>
+            <input value={atk.damage} onChange={e=>{const a=[...c.attacks];a[i]={...a[i],damage:e.target.value};upd("attacks",a);}} style={{width:"100%",textAlign:"center",background:"transparent",border:"1px solid rgba(122,28,28,.35)",borderRadius:2,outline:"none",fontFamily:"'Cinzel',serif",fontSize:".75rem",fontWeight:700,color:red,padding:"2px 0"}}/>
+            <button onClick={()=>{doRoll(20,"Atk: "+atk.name);setTab("dice");}} style={{...T.bts("p"),fontSize:".44rem",padding:"3px 4px"}}>Roll</button>
+          </div>
+        ))}
+        <div style={{display:"flex",gap:6,marginTop:5}}>
+          <button onClick={()=>upd("attacks",[...c.attacks,{name:"New Attack",toHit:"+0",damage:"1d6",dmgType:""}])} style={{...T.bts(""),flex:1,borderStyle:"dashed"}}>+ Custom</button>
+          <button onClick={()=>setModal("weapons")} style={{...T.bts("p"),flex:1}}>⚔ Browse Weapons</button>
+        </div>
+
+        <D l="Death Saving Throws"/>
+        <div style={{background:"rgba(139,101,32,.06)",border:"1.5px solid #8b6520",padding:"9px 11px",display:"flex",gap:14,alignItems:"center",flexWrap:"wrap",borderRadius:2,marginBottom:9}}>
+          <span style={{...T.lbl,fontSize:".55rem"}}>Successes</span>
+          <div style={{display:"flex",gap:6}}>{[1,2,3].map(n=><div key={n} style={{width:15,height:15,borderRadius:"50%",cursor:"pointer",border:"1.5px solid #8b6520",background:n<=c.dsS?"#1c4a1c":"transparent",transition:"all .15s"}} onClick={()=>upd("dsS",c.dsS>=n?n-1:n)}/>)}</div>
+          <span style={{...T.lbl,fontSize:".55rem"}}>Failures</span>
+          <div style={{display:"flex",gap:6}}>{[1,2,3].map(n=><div key={n} style={{width:15,height:15,borderRadius:"50%",cursor:"pointer",border:"1.5px solid #8b6520",background:n<=c.dsF?red:"transparent",transition:"all .15s"}} onClick={()=>upd("dsF",c.dsF>=n?n-1:n)}/>)}</div>
+        </div>
+
+        <D l="Conditions"/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,marginBottom:10}}>
+          {CONDS.map(cd=>{
+            const on=c.conditions.includes(cd);
+            return(<div key={cd} onClick={()=>upd("conditions",on?c.conditions.filter(x=>x!==cd):[...c.conditions,cd])} style={{display:"flex",alignItems:"center",gap:7,padding:"5px 8px",background:on?"rgba(122,28,28,.1)":"rgba(139,101,32,.06)",border:`1px solid ${on?red:"rgba(139,101,32,.25)"}`,borderRadius:2,cursor:"pointer",userSelect:"none"}}>
+              <div style={{width:10,height:10,borderRadius:"50%",border:"1.5px solid #8b6520",background:on?red:"transparent",flexShrink:0}}/>
+              <span style={{fontFamily:"'Cinzel',serif",fontSize:".6rem",color:ink}}>{cd}</span>
+            </div>);
+          })}
+        </div>
+
+        {hasSp&&(<>
+          <D l="Spell Slots"/>
+          <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+            {slots.map((count,lvl)=>{
+              if(!count)return null;
+              const used=(c.slotsUsed||{})[lvl]||0;
+              return(<div key={lvl} style={{background:"rgba(139,101,32,.06)",border:"1.5px solid #8b6520",padding:"5px 7px",textAlign:"center",borderRadius:2,minWidth:42}}>
+                <div style={{fontFamily:"'Cinzel',serif",fontSize:".48rem",textTransform:"uppercase",color:goldd,marginBottom:4}}>{["1st","2nd","3rd","4th","5th"][lvl]}</div>
+                <div style={{display:"flex",gap:3,justifyContent:"center",flexWrap:"wrap"}}>
+                  {Array.from({length:count},(_,p)=><div key={p} style={{width:12,height:12,borderRadius:"50%",cursor:"pointer",border:"1.5px solid #8b6520",background:p<used?"transparent":goldb,transition:"all .15s"}} onClick={()=>{const su={...(c.slotsUsed||{})};su[lvl]=su[lvl]>p?p:p+1;upd("slotsUsed",su);}}/>)}
+                </div>
+              </div>);
+            })}
+          </div>
+        </>)}
+      </div>
+    )}
+
+    {/* ═══ SPELLS ═══ */}
+    {tab==="spells"&&(
+      <div>
+        {ca?(
+          <div style={{...T.g3,marginBottom:10}}>
+            <div style={T.sb}><div style={T.lbl}>Spell Save DC</div><div style={T.sbV}>{8+prof+cm}</div></div>
+            <div style={T.sb}><div style={T.lbl}>Spell Attack</div><div style={T.sbV}>{fm(prof+cm)}</div></div>
+            <div style={T.sb}><div style={T.lbl}>Casting Ability</div><div style={T.sbV}>{ca.toUpperCase()}</div></div>
+          </div>
+        ):(
+          <div style={{background:"rgba(26,47,90,.07)",border:"1px solid rgba(26,47,90,.28)",borderRadius:2,padding:"8px 10px",marginBottom:10,fontSize:".82rem",color:blue,lineHeight:1.5}}>Select a spellcasting class on the Hero tab to unlock spellcasting stats.</div>
+        )}
+        <button onClick={()=>setModal("spells")} style={{...T.btn("p"),width:"100%",marginBottom:12}}>✨ Browse Full D&amp;D 5e Spell Database ({SPELLS.length} spells)</button>
+        {c.spells.length>0&&(
+          <>
+            <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:8}}>
+              {[-1,0,1,2,3,4,5].map(lvl=>{const cnt=lvl===-1?c.spells.length:c.spells.filter(sp=>sp.level===lvl).length;if(lvl!==-1&&!cnt)return null;return(<button key={lvl} onClick={()=>setSpF(lvl)} style={{...T.bts(spF===lvl?"p":""),fontSize:".48rem",padding:"3px 8px"}}>{lvl===-1?"All":lvl===0?"Cantrips":["","1st","2nd","3rd","4th","5th"][lvl]} ({cnt})</button>);})}
+            </div>
+            <D l="Your Spell List"/>
+            {c.spells.filter(sp=>spF===-1||sp.level===spF).map((sp,i)=>(
+              <div key={i} style={{background:"rgba(139,101,32,.06)",border:"1px solid rgba(139,101,32,.25)",borderRadius:2,padding:"8px 10px",marginBottom:5}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",cursor:"pointer"}} onClick={()=>setExpSp(expSp===i?null:i)}>
+                  <span style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",fontWeight:600,color:ink,flex:1}}>{sp.name}</span>
+                  <span style={T.bdg(sp.level===0?"b":"gold")}>{sp.level===0?"Cantrip":["","1st","2nd","3rd","4th","5th","6th","7th","8th","9th"][sp.level]}</span>
+                  <span style={T.bdg("gold")}>{sp.school}</span>
+                  {sp.duration?.toLowerCase().includes("conc")&&<span style={T.bdg("r")}>Conc</span>}
+                  {sp.castTime?.toLowerCase().includes("reaction")&&<span style={T.bdg("r")}>Reaction</span>}
+                  {sp.castTime?.toLowerCase().includes("bonus")&&<span style={T.bdg("g")}>Bonus</span>}
+                  <button onClick={e=>{e.stopPropagation();upd("spells",c.spells.filter((_,j)=>j!==i));}} style={{background:"transparent",border:"none",color:red,cursor:"pointer",fontSize:".9rem",padding:"0 2px"}}>×</button>
+                </div>
+                {expSp===i&&(
+                  <div style={{marginTop:7,paddingTop:7,borderTop:"1px solid rgba(139,101,32,.2)"}}>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 12px",marginBottom:6,fontSize:".82rem"}}>
+                      {[["Cast Time",sp.castTime],["Range",sp.range],["Components",sp.components],["Duration",sp.duration],["Save/Atk",sp.saveAtk]].map(([k,v])=>(
+                        <div key={k}><span style={{fontFamily:"'Cinzel',serif",fontSize:".44rem",color:goldd,textTransform:"uppercase",letterSpacing:".07em",display:"block"}}>{k}</span>{v}</div>
+                      ))}
+                    </div>
+                    <div style={{fontSize:".83rem",color:ink2,lineHeight:1.55,marginBottom:6}}>{sp.desc}</div>
+                    {sp.classes&&<div style={{fontSize:".75rem",color:goldd,fontStyle:"italic"}}>{sp.classes.join(", ")}</div>}
+                    {sp.saveAtk&&sp.saveAtk!=="—"&&(
+                      <button onClick={()=>{doRoll(20,"Spell: "+sp.name,prof+cm);setTab("dice");}} style={{...T.bts("p"),marginTop:6}}>🎲 Roll Spell Attack ({fm(prof+cm)})</button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+        {!c.spells.length&&<div style={{textAlign:"center",padding:"24px 0",color:goldd,fontStyle:"italic"}}>No spells added yet. Click "Browse" above.</div>}
+      </div>
+    )}
+
+    {/* ═══ SKILLS ═══ */}
+    {tab==="skills"&&(
+      <div>
+        <p style={{fontFamily:"'Crimson Text',serif",fontSize:".78rem",color:ink2,fontStyle:"italic",marginBottom:8}}>Tap pip once = proficient ●, twice = expertise ◉</p>
+        <D l="Skills"/>
+        {SKS.map((sk,i)=>{
+          const p=c.skillProf[sk.n]||0;
+          const bonus=gm(c[sk.a])+(p===1?prof:p===2?prof*2:0);
+          return(
+            <div key={sk.n} style={{display:"flex",alignItems:"center",gap:6,padding:"3px 4px",borderRadius:2,background:i%2===0?"rgba(139,101,32,.04)":"transparent"}}>
+              <div style={T.pip(p)} onClick={()=>upd("skillProf",{...c.skillProf,[sk.n]:(p+1)%3})}/>
+              <span style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",fontWeight:600,color:ink,minWidth:20,textAlign:"right"}}>{fm(bonus)}</span>
+              <span style={{fontFamily:"'Crimson Text',serif",fontSize:".87rem",flex:1}}>{sk.n}</span>
+              <span style={{fontFamily:"'Cinzel',serif",fontSize:".48rem",color:goldd,letterSpacing:".06em"}}>{sk.a.toUpperCase()}</span>
+            </div>
+          );
+        })}
+        <D l="Saving Throws"/>
+        {ABS.map((ab,i)=>{
+          const p=c.saveProf[ab.id]||0;
+          const bonus=gm(c[ab.id])+(p?prof:0);
+          return(
+            <div key={ab.id} style={{display:"flex",alignItems:"center",gap:6,padding:"3px 4px",background:i%2===0?"rgba(139,101,32,.04)":"transparent",borderRadius:2}}>
+              <div style={T.pip(p?1:0)} onClick={()=>upd("saveProf",{...c.saveProf,[ab.id]:p?0:1})}/>
+              <span style={{fontFamily:"'Cinzel',serif",fontSize:".68rem",fontWeight:600,color:ink,minWidth:20,textAlign:"right"}}>{fm(bonus)}</span>
+              <span style={{fontFamily:"'Crimson Text',serif",fontSize:".87rem",flex:1}}>{ab.id.charAt(0).toUpperCase()+ab.id.slice(1)}</span>
+            </div>
+          );
+        })}
+        <D l="Proficiencies &amp; Languages"/>
+        <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:8}}>
+          {(c.profTags||[]).map((t,i)=>(
+            <span key={i} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",border:"1px solid rgba(139,101,32,.4)",borderRadius:10,fontFamily:"'Crimson Text',serif",fontSize:".82rem",color:ink2,background:"rgba(139,101,32,.05)"}}>
+              {t}<span onClick={()=>upd("profTags",(c.profTags||[]).filter((_,j)=>j!==i))} style={{cursor:"pointer",color:red,marginLeft:2}}>×</span>
+            </span>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:6}}>
+          <input id="ptag" style={{...T.inp,border:"1px solid rgba(139,101,32,.35)",borderRadius:2,padding:"5px 8px",flex:1}} placeholder="Add proficiency or language…" onKeyDown={e=>{if(e.key==="Enter"&&e.target.value.trim()){upd("profTags",[...(c.profTags||[]),e.target.value.trim()]);e.target.value="";}}}/>
+          <button style={T.bts("p")} onClick={()=>{const el=document.getElementById("ptag");if(el?.value.trim()){upd("profTags",[...(c.profTags||[]),el.value.trim()]);el.value="";}}}>Add</button>
+        </div>
+      </div>
+    )}
+
+    {/* ═══ GEAR ═══ */}
+    {tab==="gear"&&(
+      <div>
+        <D l="Currency"/>
+        <div style={{...T.g5,marginBottom:14}}>
+          {["cp","sp","ep","gp","pp"].map(coin=>(
+            <div key={coin}>
+              <div style={{...T.lbl,textAlign:"center",marginBottom:3}}>{coin.toUpperCase()}</div>
+              <input type="number" min={0} value={c[coin]||0} onChange={e=>upd(coin,Number(e.target.value))} style={{width:"100%",textAlign:"center",background:"rgba(139,101,32,.08)",border:"1px solid #8b6520",borderRadius:2,padding:"5px 2px",fontFamily:"'Cinzel',serif",fontSize:".9rem",fontWeight:600,color:ink,outline:"none"}}/>
+            </div>
+          ))}
+        </div>
+        <D l="Inventory"/>
+        <div style={{display:"flex",gap:6,marginBottom:8}}>
+          <button onClick={()=>setModal("equipment")} style={{...T.bts("p"),flex:1}}>🎒 Browse Equipment</button>
+          <button onClick={()=>setModal("potions")} style={{...T.bts("p"),flex:1}}>⚗ Browse Potions</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 46px 58px 46px 24px",gap:5,padding:"4px 6px",background:"rgba(139,101,32,.1)",border:"1.5px solid #8b6520",borderRadius:"2px 2px 0 0"}}>
+          {["Item","Qty","Weight","Value",""].map(h=><span key={h} style={{fontFamily:"'Cinzel',serif",fontSize:".44rem",textTransform:"uppercase",color:goldd,textAlign:"center"}}>{h}</span>)}
+        </div>
+        {(c.inventory||[]).map((it,i)=>(
+          <div key={i} style={{display:"grid",gridTemplateColumns:"1fr 46px 58px 46px 24px",gap:5,padding:"4px 6px",background:i%2===0?"rgba(139,101,32,.04)":"transparent",border:"1px solid rgba(139,101,32,.2)",borderTop:"none",alignItems:"center"}}>
+            <input value={it.name||""} onChange={e=>{const inv=[...c.inventory];inv[i]={...inv[i],name:e.target.value};upd("inventory",inv);}} style={{background:"transparent",border:"none",borderBottom:"1px solid rgba(139,101,32,.3)",outline:"none",fontFamily:"'Crimson Text',serif",fontSize:".87rem",color:ink,width:"100%"}}/>
+            <input type="number" value={it.qty||1} onChange={e=>{const inv=[...c.inventory];inv[i]={...inv[i],qty:Number(e.target.value)};upd("inventory",inv);}} style={{width:"100%",textAlign:"center",background:"transparent",border:"none",borderBottom:"1px solid rgba(139,101,32,.3)",outline:"none",fontFamily:"'Cinzel',serif",fontSize:".78rem",color:ink}}/>
+            <input value={it.weight||""} onChange={e=>{const inv=[...c.inventory];inv[i]={...inv[i],weight:e.target.value};upd("inventory",inv);}} style={{width:"100%",textAlign:"center",background:"transparent",border:"none",borderBottom:"1px solid rgba(139,101,32,.3)",outline:"none",fontFamily:"'Crimson Text',serif",fontSize:".82rem",color:ink}}/>
+            <input value={it.value||""} onChange={e=>{const inv=[...c.inventory];inv[i]={...inv[i],value:e.target.value};upd("inventory",inv);}} style={{width:"100%",textAlign:"center",background:"transparent",border:"none",borderBottom:"1px solid rgba(139,101,32,.3)",outline:"none",fontFamily:"'Crimson Text',serif",fontSize:".82rem",color:ink}}/>
+            <button onClick={()=>upd("inventory",c.inventory.filter((_,j)=>j!==i))} style={{background:"transparent",border:"none",color:red,cursor:"pointer",fontSize:"1rem",fontWeight:700,padding:0}}>×</button>
+          </div>
+        ))}
+        <button onClick={()=>upd("inventory",[...(c.inventory||[]),{name:"",qty:1,weight:"",value:""}])} style={{...T.bts(""),width:"100%",marginTop:4,borderStyle:"dashed"}}>+ Add Custom Item</button>
+      </div>
+    )}
+
+    {/* ═══ LORE ═══ */}
+    {tab==="lore"&&(
+      <div>
+        <D l="Personality"/>
+        <div style={{...T.g2,marginBottom:10}}>
+          <FG label="Personality Traits" id="personality" rows={3} ph="How do you act and speak?"/>
+          <FG label="Ideals" id="ideals" rows={3} ph="What drives you?"/>
+          <FG label="Bonds" id="bonds" rows={3} ph="Connections and loyalties…"/>
+          <FG label="Flaws" id="flaws" rows={3} ph="Weaknesses and vices…"/>
+        </div>
+        <D l="Backstory"/>
+        <FG label="Character History" id="backstory" rows={5} ph="Where do you come from? What shaped you?"/>
+        <div style={{marginTop:10}}><D l="Features &amp; Traits"/></div>
+        <FG label="Class Features, Racial Abilities &amp; Feats" id="features" rows={4} ph="List your features here…"/>
+        <div style={{marginTop:10}}><D l="Campaign Notes"/></div>
+        <FG label="Session Notes" id="notes" rows={4} ph="Quest hooks, NPC names, key events…"/>
+      </div>
+    )}
+
+    {/* ═══ DICE ═══ */}
+    {tab==="dice"&&(
+      <div>
+        <D l="Dice Roller"/>
+        <div style={{background:"rgba(139,101,32,.08)",border:"2px solid #8b6520",borderRadius:3,padding:12,textAlign:"center",minHeight:80,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",marginBottom:10}}>
+          {roll?(
+            <>
+              <div style={{fontFamily:"'Cinzel Decorative',serif",fontSize:"2.5rem",color:roll.crit?"#1c4a1c":roll.fumble?red:ink,lineHeight:1}}>{roll.v}</div>
+              <div style={{fontFamily:"'Cinzel',serif",fontSize:".55rem",letterSpacing:".12em",textTransform:"uppercase",color:goldd,marginTop:4}}>{roll.lbl}{roll.mod?` (${fm(roll.mod)})`:""}{roll.crit?" — CRITICAL!":roll.fumble?" — FUMBLE!":""}</div>
+            </>
+          ):<div style={{color:goldd,fontStyle:"italic"}}>Select a die to roll</div>}
+        </div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",justifyContent:"center",marginBottom:8}}>
+          {[4,6,8,10,12,20,100].map(d=>(
+            <button key={d} onClick={()=>doRoll(d,`d${d}`)} style={{width:46,height:46,border:"1.5px solid #8b6520",borderRadius:3,background:"rgba(139,101,32,.08)",fontFamily:"'Cinzel',serif",fontSize:".7rem",fontWeight:700,color:ink,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:1}}>
+              <span style={{fontSize:"1rem"}}>⬡</span>d{d}
+            </button>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:6,marginBottom:10}}>
+          <button style={{...T.bts(""),flex:1}} onClick={()=>{const a=Math.floor(Math.random()*20)+1,b=Math.floor(Math.random()*20)+1,r=Math.max(a,b);setRoll({v:r,r,lbl:`d20 Adv (${a},${b})`,mod:0,sides:20,crit:r===20,fumble:r===1});setHist(p=>[{v:r,lbl:"d20 Adv",crit:r===20,fumble:r===1,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})},...p.slice(0,19)]);}}>Advantage (2d20↑)</button>
+          <button style={{...T.bts(""),flex:1}} onClick={()=>{const a=Math.floor(Math.random()*20)+1,b=Math.floor(Math.random()*20)+1,r=Math.min(a,b);setRoll({v:r,r,lbl:`d20 Dis (${a},${b})`,mod:0,sides:20,crit:r===20,fumble:r===1});setHist(p=>[{v:r,lbl:"d20 Dis",crit:r===20,fumble:r===1,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})},...p.slice(0,19)]);}}>Disadvantage (2d20↓)</button>
+        </div>
+        <D l="Custom Roll"/>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:10}}>
+          <input id="dn" type="number" min={1} max={20} defaultValue={1} style={{width:44,...T.inp,border:"1px solid #8b6520",borderRadius:2,padding:5,textAlign:"center"}}/>
+          <span style={{color:goldd,fontFamily:"'Cinzel',serif"}}>d</span>
+          <input id="ds" type="number" min={2} max={1000} defaultValue={20} style={{width:54,...T.inp,border:"1px solid #8b6520",borderRadius:2,padding:5,textAlign:"center"}}/>
+          <span style={{color:goldd,fontFamily:"'Cinzel',serif"}}>+</span>
+          <input id="dm" type="number" defaultValue={0} style={{width:50,...T.inp,border:"1px solid #8b6520",borderRadius:2,padding:5,textAlign:"center"}}/>
+          <button style={T.bts("p")} onClick={()=>{const n=parseInt(document.getElementById("dn").value)||1,d=parseInt(document.getElementById("ds").value)||20,m=parseInt(document.getElementById("dm").value)||0;let t=m,rs=[];for(let i=0;i<n;i++){const r=Math.floor(Math.random()*d)+1;t+=r;rs.push(r);}setRoll({v:t,lbl:`${n}d${d}${m?fm(m):""}=[${rs}]`,crit:false,fumble:false});setHist(p=>[{v:t,lbl:`${n}d${d}${m?fm(m):""}`,crit:false,fumble:false,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})},...p.slice(0,19)]);}}>Roll</button>
+        </div>
+        {hist.length>0&&(<><D l="History"/><div style={{maxHeight:110,overflowY:"auto"}}>{hist.map((h,i)=><div key={i} style={{padding:"2px 4px",borderBottom:"1px solid rgba(139,101,32,.12)",fontFamily:"'Crimson Text',serif",fontSize:".82rem",display:"flex",gap:8}}><span style={{color:goldd,fontSize:".72rem",flexShrink:0}}>{h.time}</span><span style={{flex:1}}>{h.lbl}</span><strong style={{color:h.crit?"#1c4a1c":h.fumble?red:ink}}>{h.v}{h.crit?" ★":h.fumble?" ✗":""}</strong></div>)}</div></>)}
+      </div>
+    )}
+
+    {/* ═══ PARTY ═══ */}
+    {tab==="party"&&(
+      <div>
+        <D l="Party Communication"/>
+        {!sess?(
+          <>
+            <div style={{background:"rgba(26,47,90,.07)",border:"1px solid rgba(26,47,90,.28)",borderRadius:2,padding:"8px 10px",marginBottom:10,fontSize:".82rem",color:blue,lineHeight:1.6}}>Enter party members one per line. Format: <em>Name (Class)</em> e.g. "Aelindra (Ranger)"</div>
+            <div style={{...{display:"flex",flexDirection:"column",gap:3},marginBottom:8}}>
+              <label style={T.lbl}>Party Members</label>
+              <textarea style={{...T.ta,minHeight:90}} value={ptTxt} onChange={e=>setPtTxt(e.target.value)} placeholder={"Aelindra (Ranger)\nDrock (Fighter)\nMira (Bard)"}/>
+            </div>
+            <button style={T.btn("p")} onClick={()=>{const names=ptTxt.split("\n").map(n=>n.trim()).filter(Boolean);if(!names.length){showToast("Enter at least one name");return;}upd("party",[{name:"Dungeon Master",role:"DM",isDM:true},...names.map(n=>{const m=n.match(/^(.+?)\s*\((.+?)\)$/);return m?{name:m[1].trim(),role:m[2].trim(),isDM:false}:{name:n,role:"Player",isDM:false};})]);setSess(true);showToast("Session started!");}}>Start Session</button>
+          </>
+        ):(
+          <>
+            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:9}}>
+              <button style={T.bts("")} onClick={()=>setRecs((c.party||[]).map((_,i)=>i).filter(i=>!(c.party||[])[i].isDM))}>All Players</button>
+              <button style={T.bts("")} onClick={()=>setRecs((c.party||[]).map((_,i)=>i).filter(i=>(c.party||[])[i].isDM))}>DM Only</button>
+              <button style={T.bts("")} onClick={()=>setRecs((c.party||[]).map((_,i)=>i))}>Everyone</button>
+              <button style={T.bts("")} onClick={()=>setRecs([])}>Clear</button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:10}}>
+              {(c.party||[]).map((m,i)=>{
+                const sel=recs.includes(i);
+                const init=m.name.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
+                return(<div key={i} onClick={()=>setRecs(sel?recs.filter(x=>x!==i):[...recs,i])} style={{display:"flex",alignItems:"center",gap:9,padding:"7px 10px",background:sel?(m.isDM?"rgba(122,28,28,.12)":"rgba(26,47,90,.1)"):"rgba(139,101,32,.07)",border:`1.5px solid ${sel?(m.isDM?red:blue):"rgba(139,101,32,.3)"}`,borderRadius:2,cursor:"pointer",userSelect:"none",transition:"all .2s"}}>
+                  <div style={{width:30,height:30,borderRadius:"50%",border:"1.5px solid #8b6520",background:"rgba(245,230,200,.8)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Cinzel',serif",fontSize:".7rem",fontWeight:700,color:goldd,flexShrink:0}}>{init}</div>
+                  <div style={{flex:1}}><div style={{fontFamily:"'Cinzel',serif",fontSize:".7rem",fontWeight:600,color:ink}}>{m.name}</div><div style={{fontFamily:"'Crimson Text',serif",fontSize:".78rem",color:ink2,fontStyle:"italic"}}>{m.isDM?"Dungeon Master":m.role}</div></div>
+                  <div style={{width:14,height:14,borderRadius:"50%",border:"1.5px solid #8b6520",background:sel?(m.isDM?red:blue):"transparent",transition:"all .15s",flexShrink:0}}/>
+                </div>);
+              })}
+            </div>
+            <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:8}}>
+              {["Need healing!","Trap ahead!","Flanking — adv!","Using reaction","Cover me!","Low on spells","Ready action","Retreat!"].map(q=>(
+                <button key={q} style={{padding:"3px 8px",border:"1px solid rgba(139,101,32,.35)",borderRadius:10,background:"transparent",fontFamily:"'Cinzel',serif",fontSize:".46rem",letterSpacing:".05em",textTransform:"uppercase",color:goldd,cursor:"pointer"}} onClick={()=>setMsgIn(q)}>{q}</button>
+              ))}
+            </div>
+            <D l="Messages"/>
+            <div style={{maxHeight:160,overflowY:"auto",display:"flex",flexDirection:"column",gap:4,marginBottom:8}}>
+              {!(c.msgs||[]).length&&<div style={{color:goldd,fontStyle:"italic",fontSize:".85rem",padding:"6px 0"}}>No messages yet…</div>}
+              {(c.msgs||[]).map((m,i)=>(
+                <div key={i} style={{padding:"7px 10px",borderRadius:2,background:m.isDM?"rgba(122,28,28,.08)":"rgba(26,47,90,.08)",border:`1px solid ${m.isDM?"rgba(122,28,28,.3)":"rgba(26,47,90,.25)"}`,alignSelf:"flex-end",maxWidth:"90%"}}>
+                  <div style={{fontFamily:"'Cinzel',serif",fontSize:".44rem",color:m.isDM?red:blue,marginBottom:2}}>To: {m.to}</div>
+                  <div style={{fontSize:".87rem"}}>{m.text}</div>
+                  <div style={{fontFamily:"'Cinzel',serif",fontSize:".44rem",color:goldd,textAlign:"right",marginTop:2}}>{m.time}</div>
+                </div>
+              ))}
+            </div>
+            <textarea style={{...T.ta,minHeight:65}} value={msgIn} onChange={e=>setMsgIn(e.target.value)} placeholder="Type message… (Ctrl+Enter to send)" onKeyDown={e=>{if(e.ctrlKey&&e.key==="Enter"){if(!recs.length){showToast("Select a recipient");return;}if(!msgIn.trim()){showToast("Type a message first");return;}const tn=recs.map(i=>(c.party||[])[i]?.name||"").join(", ");const isDM=recs.some(i=>(c.party||[])[i]?.isDM);upd("msgs",[...(c.msgs||[]),{text:msgIn.trim(),to:tn,isDM,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}]);setMsgIn("");showToast("Sent!");}}}/>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:8,marginTop:6,alignItems:"center"}}>
+              <span style={{fontSize:".72rem",color:ink2,fontStyle:"italic"}}>Ctrl+Enter to send</span>
+              <button style={T.btn("b")} onClick={()=>{if(!recs.length){showToast("Select a recipient");return;}if(!msgIn.trim()){showToast("Type a message first");return;}const tn=recs.map(i=>(c.party||[])[i]?.name||"").join(", ");const isDM=recs.some(i=>(c.party||[])[i]?.isDM);upd("msgs",[...(c.msgs||[]),{text:msgIn.trim(),to:tn,isDM,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}]);setMsgIn("");showToast("Sent!");}}>Send ➤</button>
+            </div>
+          </>
+        )}
+      </div>
+    )}
+
+    {/* Footer */}
+    <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:16,paddingTop:13,borderTop:"1px solid rgba(139,101,32,.3)"}}>
+      <button style={T.btn("")} onClick={()=>{if(confirm("Clear this character?"))setChars(p=>{const n=[...p];n[ai]=defChar();return n;});}}>Clear</button>
+      <button style={T.btn("p")} onClick={()=>{try{localStorage.setItem("tl5e_"+ai,JSON.stringify(c));showToast("Character saved ✦");}catch(e){showToast("Save failed");}}}>✦ Save</button>
+      <button style={T.btn("")} onClick={()=>{try{const raw=localStorage.getItem("tl5e_"+ai);if(raw){const d=JSON.parse(raw);setChars(p=>{const n=[...p];n[ai]={...defChar(),...d};return n;});showToast("Character loaded!");}else showToast("No saved data found.");}catch(e){showToast("Load failed");}}}>↑ Load</button>
+    </div>
+  </div>
+
+  {/* ═══ MODALS ═══ */}
+  {modal==="spells"&&(
+    <Modal title="✨ Spell Database" items={SPELLS} fkey="school"
+      onClose={()=>setModal(null)}
+      onAdd={sp=>{if(c.spells.find(x=>x.name===sp.name)){showToast("Already in spell list");return;}upd("spells",[...c.spells,sp]);showToast(`${sp.name} added!`);}}
+      Card={({item:sp,expanded,onAdd})=>(
+        <>
+          <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",fontWeight:600,color:ink,flex:1}}>{sp.name}</span>
+            <span style={T.bdg(sp.level===0?"b":"gold")}>{sp.level===0?"Cantrip":["","1st","2nd","3rd","4th","5th","6th","7th","8th","9th"][sp.level]}</span>
+            <span style={T.bdg("gold")}>{sp.school}</span>
+            {sp.duration?.toLowerCase().includes("conc")&&<span style={T.bdg("r")}>Conc</span>}
+            {sp.castTime?.toLowerCase().includes("bonus")&&<span style={T.bdg("g")}>Bonus</span>}
+            {sp.castTime?.toLowerCase().includes("reaction")&&<span style={T.bdg("r")}>Reaction</span>}
+          </div>
+          <div style={{fontFamily:"'Crimson Text',serif",fontSize:".78rem",color:ink2,marginTop:3,display:"flex",gap:8,flexWrap:"wrap"}}>
+            <span>{sp.castTime}</span><span>·</span><span>{sp.range}</span><span>·</span><span>{sp.duration}</span>{sp.saveAtk&&sp.saveAtk!=="—"&&<><span>·</span><span style={{color:red}}>{sp.saveAtk}</span></>}
+          </div>
+          <div style={{fontFamily:"'Cinzel',serif",fontSize:".44rem",color:goldd,marginTop:2}}>{(sp.classes||[]).join(", ")}</div>
+          {expanded&&(
+            <div style={{marginTop:7,paddingTop:7,borderTop:"1px solid rgba(139,101,32,.2)"}}>
+              <div style={{fontSize:".83rem",color:ink2,lineHeight:1.55,marginBottom:8}}>{sp.desc}</div>
+              <div style={{marginBottom:8,fontSize:".78rem"}}><strong>Components:</strong> {sp.components}</div>
+              <button style={T.btn("p")} onClick={e=>{e.stopPropagation();onAdd();}}>＋ Add to Spell List</button>
+            </div>
+          )}
+        </>
+      )}
+    />
+  )}
+
+  {modal==="weapons"&&(
+    <Modal title="⚔ Weapon Database" items={WEAPONS} fkey="category"
+      onClose={()=>setModal(null)}
+      onAdd={w=>{upd("attacks",[...c.attacks,{name:w.name,toHit:fm(gm(c.str)+prof),damage:w.damage,dmgType:w.dmgType,notes:w.properties||""}]);showToast(`${w.name} added!`);}}
+      Card={({item:w,expanded,onAdd})=>(
+        <>
+          <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",fontWeight:600,color:ink,flex:1}}>{w.name}</span>
+            <span style={T.bdg("r")}>{w.dmgType}</span>
+            <span style={T.bdg("gold")}>{w.category}</span>
+            <span style={{fontFamily:"'Cinzel',serif",fontWeight:700,fontSize:".72rem",color:red}}>{w.damage}</span>
+          </div>
+          <div style={{fontFamily:"'Crimson Text',serif",fontSize:".78rem",color:ink2,marginTop:3}}>{w.properties} · {w.weight} lb · {w.cost}</div>
+          {expanded&&(
+            <div style={{marginTop:7,paddingTop:7,borderTop:"1px solid rgba(139,101,32,.2)"}}>
+              {w.desc&&<div style={{fontSize:".83rem",color:ink2,marginBottom:8}}>{w.desc}</div>}
+              <button style={T.btn("p")} onClick={e=>{e.stopPropagation();onAdd();}}>＋ Add to Attacks</button>
+            </div>
+          )}
+        </>
+      )}
+    />
+  )}
+
+  {modal==="equipment"&&(
+    <Modal title="🎒 Equipment Database" items={EQUIPMENT} fkey="category"
+      onClose={()=>setModal(null)}
+      onAdd={eq=>{upd("inventory",[...(c.inventory||[]),{name:eq.name,qty:1,weight:eq.weight||"",value:eq.cost||""}]);showToast(`${eq.name} added!`);}}
+      Card={({item:eq,expanded,onAdd})=>(
+        <>
+          <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",fontWeight:600,color:ink,flex:1}}>{eq.name}</span>
+            <span style={T.bdg("gold")}>{eq.category}</span>
+            {eq.ac&&<span style={T.bdg("b")}>AC {eq.ac}</span>}
+            <span style={{fontFamily:"'Crimson Text',serif",fontSize:".78rem",color:ink2}}>{eq.cost}</span>
+          </div>
+          <div style={{fontFamily:"'Crimson Text',serif",fontSize:".78rem",color:ink2,marginTop:2}}>{eq.weight} lb{eq.desc?` · ${eq.desc}`:""}</div>
+          {expanded&&(
+            <div style={{marginTop:7,paddingTop:7,borderTop:"1px solid rgba(139,101,32,.2)"}}>
+              <button style={T.btn("p")} onClick={e=>{e.stopPropagation();onAdd();}}>＋ Add to Inventory</button>
+            </div>
+          )}
+        </>
+      )}
+    />
+  )}
+
+  {modal==="potions"&&(
+    <Modal title="⚗ Potions & Consumables" items={POTIONS} fkey="rarity"
+      onClose={()=>setModal(null)}
+      onAdd={p=>{upd("inventory",[...(c.inventory||[]),{name:p.name,qty:1,weight:p.weight||"",value:p.cost||""}]);showToast(`${p.name} added!`);}}
+      Card={({item:p,expanded,onAdd})=>(
+        <>
+          <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+            <span style={{fontFamily:"'Cinzel',serif",fontSize:".72rem",fontWeight:600,color:ink,flex:1}}>{p.name}</span>
+            <span style={T.bdg(p.rarity==="Common"?"gold":p.rarity==="Uncommon"?"g":p.rarity==="Rare"?"b":p.rarity==="Very Rare"?"r":p.rarity==="Legendary"?"r":"gold")}>{p.rarity}</span>
+            <span style={{fontFamily:"'Crimson Text',serif",fontSize:".78rem",color:ink2}}>{p.cost}</span>
+          </div>
+          <div style={{fontFamily:"'Crimson Text',serif",fontSize:".8rem",color:ink2,marginTop:2,fontStyle:"italic"}}>{p.effect}</div>
+          {expanded&&(
+            <div style={{marginTop:7,paddingTop:7,borderTop:"1px solid rgba(139,101,32,.2)"}}>
+              {p.desc&&<div style={{fontSize:".83rem",color:ink2,marginBottom:8}}>{p.desc}</div>}
+              <button style={T.btn("p")} onClick={e=>{e.stopPropagation();onAdd();}}>＋ Add to Inventory</button>
+            </div>
+          )}
+        </>
+      )}
+    />
+  )}
+
+  <div style={T.tst(toast.s)}>{toast.m}</div>
+</div>
+```
+
+);
+}
+
+ReactDOM.createRoot(document.getElementById(‘root’)).render(<App />);
+</script>
+
+</body>
+</html>
